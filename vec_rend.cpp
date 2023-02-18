@@ -43,5 +43,5 @@ int main() {
     SDL_RenderPresent(renderer); // Show to user
     SDL_Delay(5000); // So it does not close immediately
     
-    return 0;    
+    return 0;
 }
