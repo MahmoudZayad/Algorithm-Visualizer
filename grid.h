@@ -14,7 +14,7 @@ using namespace std;
     SDL_Color cellColor = {89, 152, 214, 255}; // light blue
 
 /*
-* Vertex
+* Cells
 * visited - if vertex has been visited before.
 * wall - if user made vertex a wall, walls cannot be traversed.
 * cost - cost difference to arrive to this vertex (total edge cost = |v2.cost - v1.cost|)
@@ -30,13 +30,38 @@ struct Cell {
     SDL_Color cellFill;
 };
 
+
+/*
+* Draws lines for the grid, windowWidth and windowHeight are calculated to create bounds
+* for the loops. The bounds are the size of the window.
+*/
+void drawGridLines(SDL_Renderer *renderer, int gridHeight, int gridWidth, int rectSize) {
+    int windowHeight = gridHeight * rectSize; // Determine window size
+    int windowWidth = gridWidth * rectSize;
+
+    SDL_SetRenderDrawColor(renderer, bG.r, bG.g, bG.b, bG.a); // color off black
+
+    // Draw vertical grid lines
+    for (int x = 0; x < 1 + windowWidth; x += rectSize) {
+        SDL_RenderDrawLine(renderer, x, 0, x, windowHeight);
+    }
+
+    // Draw horizontal grid lines.
+    for (int y = 0; y < 1 + windowHeight; y += rectSize) {
+        SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
+    }
+
+    SDL_RenderPresent(renderer);
+}
+
 /*
 * Properly spaces each rectangle for rendering on the grid.
 * Uses the rectangle size to determine how many pixels the next rectangle should be shifted.
 */
 int calculateCellCoords(int coord, int rectSize) {
-    return coord*rectSize;
+    return 1 + (coord*rectSize);
 }
+
 
 /*
 * Intialize Rectangle with color, size and coord
@@ -50,7 +75,7 @@ void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy) {
 
     // Draw Rectangles
     SDL_SetRenderDrawColor(renderer, gL.r, gL.g, gL.b, gL.a); // default color off black
-    SDL_RenderDrawRect(renderer, &r);
+    SDL_RenderFillRect(renderer, &r);
 }
 
 /*
@@ -61,7 +86,7 @@ void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy) {
 void intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int rectSize) {
     vector<vector<tuple<Cell, SDL_Rect>>> grid(gridHeight, 
     vector<tuple<Cell, SDL_Rect>>(gridWidth, make_tuple(Cell(), SDL_Rect())));
-    
+
     // Add Coord data and update colors for the rectangles
     for (int i = 0; i < gridHeight; i++) {
             for (int j = 0; j < gridWidth; j++) {
@@ -69,6 +94,9 @@ void intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int r
                 intRect(renderer, get<1>(grid[i][j]), {rectSize,i,j});
             }
         }
+
+    drawGridLines(renderer, gridHeight, gridWidth, rectSize);
+    
 }
 
 #endif
