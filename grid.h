@@ -19,6 +19,8 @@ using namespace std;
 * cost - cost difference to arrive to this vertex (total edge cost = |v2.cost - v1.cost|)
 */
 struct Cell {
+    bool start = false;
+    bool end = false;
     bool visited = false;
     bool wall = false; // Can be updated by user
     int cost = 1; // Default cost, can be adjusted by user

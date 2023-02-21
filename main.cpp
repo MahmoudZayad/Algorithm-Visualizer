@@ -56,8 +56,22 @@ int main() {
                 case SDL_QUIT: 
                     running = false; 
                     break;
-                // Mouse Motion
-                case SDL_MOUSEMOTION:
+                case SDL_MOUSEBUTTONDOWN:
+                    if (!prevStartCell) { 
+                        startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
+                        prevStartCell = &get<0>(grid[mouseY][mouseX]);
+                    } 
+                    else if (prevStartCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
+                        startCellUpdate(false, prevStartCell); // Unhighlight previous cell
+                        startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell
+                        prevStartCell = &get<0>(grid[mouseY][mouseX]);
+                    } else {
+                        startCellUpdate(false, prevStartCell); // Make a start cell a normal cell
+                        prevStartCell = nullptr;
+                    }
+                    updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
+                    break;
+                case SDL_MOUSEMOTION: // Mouse hovering - highlights cells
                     // Highlight first cell, else if new cell unhighlight previous and highlight new
                     if (!prevHighlightedCell) { 
                         mouseUpdateCellHighlight(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell

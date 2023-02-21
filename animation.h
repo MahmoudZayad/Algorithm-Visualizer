@@ -33,8 +33,8 @@ void updateScreen(SDL_Renderer *renderer, int gridHeight, int gridWidth, int rec
 
 // Mouse Cursor Animation
 // When moving mouse, whatever cell its in should highlight.
-
 void mouseUpdateCellHighlight(bool highlight, Cell *&cell) {
+    if (cell->start) {return;}
     if (highlight) {
         cell->cellFill = highlightFill;
     } else { // Unhighlight cell
@@ -43,6 +43,7 @@ void mouseUpdateCellHighlight(bool highlight, Cell *&cell) {
 }
 
 void mouseUpdateCellHighlight(bool highlight, Cell &cell) {
+    if (cell.start) {return;}
     if (highlight) {
         cell.cellFill = highlightFill;
     } else { // Unhighlight cell
@@ -52,13 +53,26 @@ void mouseUpdateCellHighlight(bool highlight, Cell &cell) {
 
 
 // // Clicking Node
-// void startCellUpdate(bool highlight, Cell *cell) {
-//     if (highlight) {
-//         cellcellFill = startFill;
-//     } else { // Unhighlight cell
-//         cell.cellFill = defaultFill;
-//     }
-// }
+void startCellUpdate(bool start, Cell *&cell) {
+    if (start) {
+        cell->cellFill = startFill;
+        cell->start = true;
+    } else { // Unhighlight cell
+        cell->cellFill = defaultFill;
+        cell->start = false;
+    }
+}
+
+void startCellUpdate(bool start, Cell &cell) {
+    if (start) {
+        cell.cellFill = startFill;
+        cell.start = true;
+    } else { // Unhighlight cell
+        cell.cellFill = defaultFill;
+        cell.start = false;
+    }
+}
+
 
 
 
