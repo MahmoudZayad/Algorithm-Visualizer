@@ -9,9 +9,8 @@
 using namespace std;
 
 // Dark theme.
-    SDL_Color bG = {22, 22, 22, 255}; // Background - Barely Black
-    SDL_Color gL = {44, 44, 44, 255}; // Grid Lines  - Dark grey
-    SDL_Color cellColor = {89, 152, 214, 255}; // light blue
+    array<int,4> lineColor = {22, 22, 22, 255}; // Background - Barely Black
+    array<int,4> defaultFill = {44, 44, 44, 255}; // Grid Lines  - Dark grey
 
 /*
 * Cells
@@ -27,7 +26,7 @@ struct Cell {
     tuple<int, int> coord; // maybe unnecessary
 
     // SDL Rectangle object - color
-    SDL_Color cellFill;
+    array<int,4> cellFill = defaultFill;
 };
 
 
@@ -39,7 +38,8 @@ void drawGridLines(SDL_Renderer *renderer, int gridHeight, int gridWidth, int re
     int windowHeight = gridHeight * rectSize; // Determine window size
     int windowWidth = gridWidth * rectSize;
 
-    SDL_SetRenderDrawColor(renderer, bG.r, bG.g, bG.b, bG.a); // color off black
+    array<int,4> c = lineColor;
+    SDL_SetRenderDrawColor(renderer, c[0], c[1], c[2], c[3]); // color off black
 
     // Draw vertical grid lines
     for (int x = 0; x < 1 + windowWidth; x += rectSize) {
@@ -50,7 +50,6 @@ void drawGridLines(SDL_Renderer *renderer, int gridHeight, int gridWidth, int re
     for (int y = 0; y < 1 + windowHeight; y += rectSize) {
         SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
     }
-
     SDL_RenderPresent(renderer);
 }
 
@@ -73,8 +72,9 @@ void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy) {
     r.x = calculateCellCoords(get<2>(sizexy), get<0>(sizexy)); 
     r.y = calculateCellCoords(get<1>(sizexy), get<0>(sizexy));
 
+    array<int,4> c = defaultFill;
     // Draw Rectangles
-    SDL_SetRenderDrawColor(renderer, gL.r, gL.g, gL.b, gL.a); // default color off black
+    SDL_SetRenderDrawColor(renderer, c[0], c[1], c[2], c[3]); // default color off black
     SDL_RenderFillRect(renderer, &r);
 }
 
@@ -83,7 +83,7 @@ void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy) {
 * keep track of the abstracted and presented properties of each cell on the grid.
 * For loop - updates the vector elements with their coords and rectangle colors.
 */
-void intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int rectSize) {
+auto intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int rectSize) {
     vector<vector<tuple<Cell, SDL_Rect>>> grid(gridHeight, 
     vector<tuple<Cell, SDL_Rect>>(gridWidth, make_tuple(Cell(), SDL_Rect())));
 
@@ -97,6 +97,7 @@ void intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int r
 
     drawGridLines(renderer, gridHeight, gridWidth, rectSize);
     
+    return grid;
 }
 
 #endif
