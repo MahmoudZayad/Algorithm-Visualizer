@@ -45,6 +45,7 @@ int main() {
     // Used to point to cells that need to be updated
     Cell *prevHighlightedCell = nullptr;
     Cell *prevStartCell = nullptr;
+    Cell *prevEndCell = nullptr;
 
     // Event Loop
     while (running) {
@@ -57,20 +58,38 @@ int main() {
                     running = false; 
                     break;
                 case SDL_MOUSEBUTTONDOWN:
-                    if (!prevStartCell) { 
-                        startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
-                        prevStartCell = &get<0>(grid[mouseY][mouseX]);
-                    } 
-                    else if (prevStartCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
-                        startCellUpdate(false, prevStartCell); // Unhighlight previous cell
-                        startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell
-                        prevStartCell = &get<0>(grid[mouseY][mouseX]);
-                    } else {
-                        startCellUpdate(false, prevStartCell); // Make a start cell a normal cell
-                        prevStartCell = nullptr;
-                    }
-                    updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
-                    break;
+                    switch (e.button.button) {
+                        case SDL_BUTTON_LEFT: // Select Start cell
+                            if (!prevStartCell) { 
+                            startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
+                            prevStartCell = &get<0>(grid[mouseY][mouseX]);
+                            } 
+                            else if (prevStartCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
+                                startCellUpdate(false, prevStartCell); // Unhighlight previous cell
+                                startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new start cell
+                                prevStartCell = &get<0>(grid[mouseY][mouseX]);
+                            } else {
+                                startCellUpdate(false, prevStartCell); // Make a start cell a normal cell
+                                prevStartCell = nullptr;
+                            }
+                            updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
+                            break;
+                        case SDL_BUTTON_RIGHT: // Select End cell
+                            if (!prevEndCell) { 
+                                endCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make end Cell
+                                prevEndCell = &get<0>(grid[mouseY][mouseX]);
+                            } 
+                            else if (prevEndCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
+                                endCellUpdate(false, prevEndCell); // Unhighlight previous cell
+                                endCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new end cell
+                                prevEndCell = &get<0>(grid[mouseY][mouseX]);
+                            } else {
+                                endCellUpdate(false, prevEndCell); // Make a end cell a normal cell
+                                prevEndCell = nullptr;
+                            }
+                            updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
+                            break;
+                        }
                 case SDL_MOUSEMOTION: // Mouse hovering - highlights cells
                     // Highlight first cell, else if new cell unhighlight previous and highlight new
                     if (!prevHighlightedCell) { 
@@ -87,5 +106,9 @@ int main() {
             }
         }
     }
+    // Remove SDL
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     return 0;
 }
