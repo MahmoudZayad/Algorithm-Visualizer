@@ -1,8 +1,10 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <vector>
+#include <bits/stdc++.h>
 #include "grid.h"
 #include "animation.h"
+#include <tuple>
 
 using namespace std;
 
@@ -36,47 +38,39 @@ int main() {
     SDL_RenderPresent(renderer);
 
     // Event handling loop
-
-    bool running = true; // Event loop 
+    bool running = true;  // Used to shut off loop
     SDL_Event e; // Event handler
-    int newCellX, newCellY; // mouse coords
-    int prevCellX = -1;
-    int prevCellY = -1;
-    cout << grid.size() << " " << grid[0].size();
+    int mouseX, mouseY; // Holds grid coordinates of mouse
+
+    // Used to point to cells that need to be updated
+    Cell *prevHighlightedCell = nullptr;
+    Cell *prevStartCell = nullptr;
+
+    // Event Loop
     while (running) {
         while (SDL_PollEvent(&e)) {
-                switch (e.type){
-                    // Close Window
-                    case SDL_QUIT: 
-                        running = false; 
-                        break;
-                    // Mouse Motion
-                    case SDL_MOUSEMOTION:
-                        cout <<e.motion.x << "," << e.motion.y << endl;
-                        int mouseX = (e.motion.x - 1)/rectSize; // -1 is for offset caused by grid lines
-                        int mouseY = (e.motion.y - 1)/rectSize;
-                        if (prevCellX == -1 && prevCellY == -1) { // First time on screen
-                            // Highlight new cell
-                            mouseUpdateCellHighlight(renderer, true, grid[mouseY][mouseX]);
-                            prevCellX = mouseX;
-                            prevCellY = mouseY;
-                            cout << "First Cell: " << mouseY << "," << mouseX << endl;
-                        } // If the cell location is different update previous cell and new cell
-                        else if (prevCellX  != mouseX || prevCellY != mouseY) {
-                            // Unhighlight previous cell
-                            mouseUpdateCellHighlight(renderer, false, grid[prevCellY][prevCellX]);
-                            cout << "previous: " << mouseY << "," << mouseX << endl;
-                            
-                            // Highlight new cell
-                            mouseUpdateCellHighlight(renderer, true, grid[mouseY][mouseX]);
-                            cout << "NEW: " << mouseY << "," << mouseX << endl;
-                            prevCellX = mouseX;
-                            prevCellY = mouseY;
-                        } 
-                        updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
-                        // Do nothing if in the same cell.
-                        break;
-                }
+            mouseX = (e.motion.x - 1)/rectSize; // -1 is for offset caused by grid lines
+            mouseY = (e.motion.y - 1)/rectSize;
+            switch (e.type){
+                // Close Window
+                case SDL_QUIT: 
+                    running = false; 
+                    break;
+                // Mouse Motion
+                case SDL_MOUSEMOTION:
+                    // Highlight first cell, else if new cell unhighlight previous and highlight new
+                    if (!prevHighlightedCell) { 
+                        mouseUpdateCellHighlight(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell
+                        prevHighlightedCell = &get<0>(grid[mouseY][mouseX]);
+                    } 
+                    else if (prevHighlightedCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
+                        mouseUpdateCellHighlight(false, prevHighlightedCell); // Unhighlight previous cell
+                        mouseUpdateCellHighlight(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell
+                        prevHighlightedCell = &get<0>(grid[mouseY][mouseX]);
+                    } 
+                    updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
+                    break;
+            }
         }
     }
     return 0;

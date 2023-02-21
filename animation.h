@@ -7,12 +7,11 @@
 
 using namespace std;
 
-array<int, 4> cellHighlight = {88, 88, 88, 255}; // lighter grey
+array<int, 4> highlightFill = {88, 88, 88, 255}; // lighter grey
+array<int, 4> startFill = {171, 237, 198, 255};  // Celadon - bluish
 
 /*
-* This creates a 2D-vector with a tuple of Cell and SDL_Rect. These are used to 
-* keep track of the abstracted and presented properties of each cell on the grid.
-* For loop - updates the vector elements with their coords and rectangle colors.
+* Redraws the screen for the next frame
 */
 void updateScreen(SDL_Renderer *renderer, int gridHeight, int gridWidth, int rectSize,
  vector<vector<tuple<Cell, SDL_Rect>>> grid) {
@@ -35,16 +34,31 @@ void updateScreen(SDL_Renderer *renderer, int gridHeight, int gridWidth, int rec
 // Mouse Cursor Animation
 // When moving mouse, whatever cell its in should highlight.
 
-void mouseUpdateCellHighlight(SDL_Renderer *renderer, bool highlight, tuple<Cell,SDL_Rect> &cell) {
+void mouseUpdateCellHighlight(bool highlight, Cell *&cell) {
     if (highlight) {
-        get<0>(cell).cellFill = cellHighlight;
+        cell->cellFill = highlightFill;
     } else { // Unhighlight cell
-        get<0>(cell).cellFill = defaultFill;
+        cell->cellFill = defaultFill;
+    }
+}
+
+void mouseUpdateCellHighlight(bool highlight, Cell &cell) {
+    if (highlight) {
+        cell.cellFill = highlightFill;
+    } else { // Unhighlight cell
+        cell.cellFill = defaultFill;
     }
 }
 
 
-// Clicking Node
+// // Clicking Node
+// void startCellUpdate(bool highlight, Cell *cell) {
+//     if (highlight) {
+//         cellcellFill = startFill;
+//     } else { // Unhighlight cell
+//         cell.cellFill = defaultFill;
+//     }
+// }
 
 
 
