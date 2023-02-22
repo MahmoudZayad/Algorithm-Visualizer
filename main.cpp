@@ -8,18 +8,14 @@
 
 using namespace std;
 
-const int WIDTH = 640; // Temporary until I figure out what to do with resizing
-const int HEIGHT = 480;
+const int WIDTH = 1280; // Temporary until I figure out what to do with resizing
+const int HEIGHT = 720;
 
-const int numCells = 300; // How many cells we want for now? Maybe ill allow user to adjust
-
-int rectSize = sqrt((WIDTH*HEIGHT)/numCells); 
+const int rectSize = 16; 
 
 // Determine size of grid
 int gridHeight = HEIGHT/rectSize;
 int gridWidth = WIDTH/rectSize;
-
-////// Start working on event handling so I can select start, end nodes and create walls.
 
 int main() {
 
@@ -44,8 +40,7 @@ int main() {
 
     // Used to point to cells that need to be updated
     Cell *prevHighlightedCell = nullptr;
-    Cell *prevStartCell = nullptr;
-    Cell *prevEndCell = nullptr;
+    Cell *prevWallCell = nullptr;
 
     // Event Loop
     while (running) {
@@ -59,33 +54,18 @@ int main() {
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                     switch (e.button.button) {
-                        case SDL_BUTTON_LEFT: // Select Start cell
-                            if (!prevStartCell) { 
-                            startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
-                            prevStartCell = &get<0>(grid[mouseY][mouseX]);
+                        case SDL_BUTTON_LEFT: // Select Start cell -- CHANGE TO WALL INSTEAD
+                            if (!prevWallCell) { 
+                            wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
+                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
                             } 
-                            else if (prevStartCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
-                                startCellUpdate(false, prevStartCell); // Unhighlight previous cell
-                                startCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new start cell
-                                prevStartCell = &get<0>(grid[mouseY][mouseX]);
+                            else if (prevWallCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
+                                wallCellUpdate(false, prevWallCell); // Unhighlight previous cell
+                                wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new start cell
+                                prevWallCell = &get<0>(grid[mouseY][mouseX]);
                             } else {
-                                startCellUpdate(false, prevStartCell); // Make a start cell a normal cell
-                                prevStartCell = nullptr;
-                            }
-                            updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
-                            break;
-                        case SDL_BUTTON_RIGHT: // Select End cell
-                            if (!prevEndCell) { 
-                                endCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make end Cell
-                                prevEndCell = &get<0>(grid[mouseY][mouseX]);
-                            } 
-                            else if (prevEndCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
-                                endCellUpdate(false, prevEndCell); // Unhighlight previous cell
-                                endCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new end cell
-                                prevEndCell = &get<0>(grid[mouseY][mouseX]);
-                            } else {
-                                endCellUpdate(false, prevEndCell); // Make a end cell a normal cell
-                                prevEndCell = nullptr;
+                                wallCellUpdate(false, prevWallCell); // Make a start cell a normal cell
+                                prevWallCell = nullptr;
                             }
                             updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
                             break;

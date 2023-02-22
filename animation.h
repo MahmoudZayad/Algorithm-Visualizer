@@ -9,8 +9,8 @@
 using namespace std;
 
 array<int, 4> highlightFill = {88, 88, 88, 255}; // lighter grey
-array<int, 4> startFill = {171, 237, 198, 255};  // Celadon - bluish 
-array<int, 4> endFill = {35, 61, 77, 255};  // Navy blue 
+array<int, 4> wallFill = {255, 88, 88, 255}; // lighter grey
+
 /*
 * Redraws the screen for the next frame
 */
@@ -58,53 +58,26 @@ void mouseUpdateCellHighlight(bool highlight, Cell &cell) {
 // Cell click events
 
 // Left Clicking Cell
-void startCellUpdate(bool start, Cell *&cell) {
-    if (start) {
-        cell->cellFill = startFill;
-        cell->start = true;
+void wallCellUpdate(bool wall, Cell *&cell) {
+    if (cell->start || cell->end) {return;}
+    if (wall) {
+        cell->cellFill = wallFill;
+        cell->wall = true;
     } else { // Unhighlight cell
         cell->cellFill = defaultFill;
-        cell->start = false;
+        cell->wall = false;
     }
-    if (cell->end) {cell->end = false;}
 }
 
-void startCellUpdate(bool start, Cell &cell) {
-    if (start) {
-        cell.cellFill = startFill;
-        cell.start = true;
+void wallCellUpdate(bool wall, Cell &cell) {
+    if (cell.start || cell.end) {return;}
+    if (wall) {
+        cell.cellFill = wallFill;
+        cell.wall = true;
     } else { // Unhighlight cell
         cell.cellFill = defaultFill;
-        cell.start = false;
+        cell.wall = false;
     }
-    if (cell.end) {cell.end = false;}
 }
-
-// Right Clicking Cell
-
-// Selecting End cell
-void endCellUpdate(bool end, Cell *&cell) {
-    if (end) {
-        cell->cellFill = endFill;
-        cell->end = true;
-    } else { // Unhighlight cell
-        cell->cellFill = defaultFill;
-        cell->end = false;
-    }
-    if (cell->start) {cell->start = false;}
-}
-
-void endCellUpdate(bool end, Cell &cell) {
-    if (end) {
-        cell.cellFill = endFill;
-        cell.end = true;
-    } else { // Unhighlight cell
-        cell.cellFill = defaultFill;
-        cell.end = false;
-    }
-    if (cell.start) {cell.start = false;}
-}
-
-
 
 #endif

@@ -11,6 +11,8 @@ using namespace std;
 // Dark theme.
     array<int,4> lineColor = {22, 22, 22, 255}; // Background - Barely Black
     array<int,4> defaultFill = {44, 44, 44, 255}; // Grid Lines  - Dark grey
+    array<int, 4> startFill = {171, 237, 198, 255};  // Celadon - bluish 
+    array<int, 4> endFill = {35, 61, 77, 255};  // Navy blue    
 
 /*
 * Cells
@@ -62,19 +64,44 @@ void drawGridLines(SDL_Renderer *renderer, int gridHeight, int gridWidth, int re
 int calculateCellCoords(int coord, int rectSize) {
     return 1 + (coord*rectSize);
 }
+ 
+// /*
+// * Purpose is to space Start and End cells 2 Quarters away from each other and one quarter
+// * away from the edge width wise. And center them Height wise.
+// */
+// array<tuple<int, int>, 4> calcStartEndCoords(int gridHeight, int gridWidth, int &rectSize) {
+//     // Height divide by 2
+//     int vSpace = floor(gridHeight/2);
+//     // Width Divide by 4
+//     int wSpace = floor(gridWidth/4);
 
+//     if
+
+// }
 
 /*
 * Intialize Rectangle with color, size and coord
 * sizexy contains the rectangle size, and the indices of the element in the grid.
 */
-void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy) {
+void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy, int gridHeight, int gridWidth) {
     r.h = get<0>(sizexy);
     r.w = get<0>(sizexy);
     r.x = calculateCellCoords(get<2>(sizexy), get<0>(sizexy)); 
     r.y = calculateCellCoords(get<1>(sizexy), get<0>(sizexy));
 
-    array<int,4> c = defaultFill;
+    int hSpace = floor(gridHeight-1/2); // For Start and End Coords
+    int wSpace = floor(gridWidth/4);
+
+    array<int, 4> c = defaultFill;
+
+    if (r.y == hSpace && r.x == wSpace) { // Start
+        c = startFill;
+    } 
+    else if (r.y == hSpace && r.x == 3*wSpace) { // End
+        c = endFill;
+    }
+
+    
     // Draw Rectangles
     SDL_SetRenderDrawColor(renderer, c[0], c[1], c[2], c[3]); // default color off black
     SDL_RenderFillRect(renderer, &r);
@@ -89,11 +116,21 @@ auto intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int r
     vector<vector<tuple<Cell, SDL_Rect>>> grid(gridHeight, 
     vector<tuple<Cell, SDL_Rect>>(gridWidth, make_tuple(Cell(), SDL_Rect())));
 
+    // For start and end placement - calculate spacing
+    int hSpace = floor(gridHeight/2);
+    int wSpace = floor(gridWidth/4);
+
     // Add Coord data and update colors for the rectangles
     for (int i = 0; i < gridHeight; i++) {
             for (int j = 0; j < gridWidth; j++) {
+                if (i == hSpace && j == wSpace) { // Start coord
+                    get<0>(grid[i][j]).start = true;
+                } 
+                else if (i == hSpace && j == 3*wSpace) { // End Coord
+                        get<0>(grid[i][j]).end = true;
+                }
                 get<0>(grid[i][j]).coord = {i,j};
-                intRect(renderer, get<1>(grid[i][j]), {rectSize,i,j});
+                intRect(renderer, get<1>(grid[i][j]), {rectSize,i,j}, gridHeight, gridWidth);
             }
         }
 
