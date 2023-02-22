@@ -40,7 +40,8 @@ int main() {
 
     // Used to point to cells that need to be updated
     Cell *prevHighlightedCell = nullptr;
-    // Cell *prevWallCell = nullptr;
+    Cell *prevWallCell = nullptr;
+    bool leftClick = false; 
 
     // Event Loop
     while (running) {
@@ -52,34 +53,37 @@ int main() {
                 case SDL_QUIT: 
                     running = false; 
                     break;
-                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONDOWN: // WORK ON DRAG EVENT
                     switch (e.button.button) {
-                        case SDL_BUTTON_LEFT: // Select Start cell -- CHANGE TO WALL INSTEAD
-                            
+                        case SDL_BUTTON_LEFT: // Select Wall cell   
+                            leftClick = true;                         
                             // If wall make it not a wall
                             if (get<0>(grid[mouseY][mouseX]).wall) {
                                 wallCellUpdate(false, get<0>(grid[mouseY][mouseX]));
-                            } else {
+                            } else { // Make it a wall
                                 wallCellUpdate(true, get<0>(grid[mouseY][mouseX]));
                             }
-                             // Make Wall Cell
-                            // // If Wall make default 
-                            // if (!prevWallCell) { 
-                            // wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
-                            // prevWallCell = &get<0>(grid[mouseY][mouseX]);
-                            // } 
-                            // else if (prevWallCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
-                            //     wallCellUpdate(false, prevWallCell); // Unhighlight previous cell
-                            //     wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new start cell
-                            //     prevWallCell = &get<0>(grid[mouseY][mouseX]);
-                            // } else {
-                            //     wallCellUpdate(false, prevWallCell); // Make a start cell a normal cell
-                            //     prevWallCell = nullptr;
-                            // }
+
                             updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
                             break;
                         }
-                case SDL_MOUSEMOTION: // Mouse hovering - highlights cells
+                case SDL_MOUSEMOTION: 
+                    // Drag events
+                    if (leftClick) {
+                        // If Wall make default 
+                        if (!prevWallCell) {                                    // Update ptr with first wall cell
+                            wallCellUpdate(true, get<0>(grid[mouseY][mouseX]));
+                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                        } else if (prevHighlightedCell->coord == get<0>(grid[mouseY][mouseX]).coord) { // Do not in same cell
+                            break;
+                        } else if (!get<0>(grid[mouseY][mouseX]).wall) {        // Make wall Cell
+                            wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); 
+                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                        } else {                                                // Remove Wall Cell
+                            wallCellUpdate(false, get<0>(grid[mouseY][mouseX]));
+                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                        }
+                    }
                     // Highlight first cell, else if new cell unhighlight previous and highlight new
                     if (!prevHighlightedCell) { 
                         mouseUpdateCellHighlight(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell
@@ -92,6 +96,11 @@ int main() {
                     } 
                     updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
                     break;
+                case SDL_MOUSEBUTTONUP:
+                    switch(e.button.button) {
+                        case SDL_BUTTON_LEFT:
+                            leftClick = false;
+                    }
             }
         }
     }
