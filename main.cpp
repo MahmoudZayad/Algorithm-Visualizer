@@ -3,13 +3,13 @@
 #include <vector>
 #include <bits/stdc++.h>
 #include "grid.h"
-#include "animation.h"
+#include "render.h"
 #include <tuple>
 
 using namespace std;
 
-const int WIDTH = 1280; // Temporary until I figure out what to do with resizing
-const int HEIGHT = 720;
+const int WIDTH = 640; // Temporary until I figure out what to do with resizing
+const int HEIGHT = 480;
 
 const int rectSize = 16; 
 
@@ -40,7 +40,7 @@ int main() {
 
     // Used to point to cells that need to be updated
     Cell *prevHighlightedCell = nullptr;
-    Cell *prevWallCell = nullptr;
+    // Cell *prevWallCell = nullptr;
 
     // Event Loop
     while (running) {
@@ -55,18 +55,27 @@ int main() {
                 case SDL_MOUSEBUTTONDOWN:
                     switch (e.button.button) {
                         case SDL_BUTTON_LEFT: // Select Start cell -- CHANGE TO WALL INSTEAD
-                            if (!prevWallCell) { 
-                            wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
-                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
-                            } 
-                            else if (prevWallCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
-                                wallCellUpdate(false, prevWallCell); // Unhighlight previous cell
-                                wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new start cell
-                                prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                            
+                            // If wall make it not a wall
+                            if (get<0>(grid[mouseY][mouseX]).wall) {
+                                wallCellUpdate(false, get<0>(grid[mouseY][mouseX]));
                             } else {
-                                wallCellUpdate(false, prevWallCell); // Make a start cell a normal cell
-                                prevWallCell = nullptr;
+                                wallCellUpdate(true, get<0>(grid[mouseY][mouseX]));
                             }
+                             // Make Wall Cell
+                            // // If Wall make default 
+                            // if (!prevWallCell) { 
+                            // wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Make start Cell
+                            // prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                            // } 
+                            // else if (prevWallCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
+                            //     wallCellUpdate(false, prevWallCell); // Unhighlight previous cell
+                            //     wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); // Select new start cell
+                            //     prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                            // } else {
+                            //     wallCellUpdate(false, prevWallCell); // Make a start cell a normal cell
+                            //     prevWallCell = nullptr;
+                            // }
                             updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
                             break;
                         }

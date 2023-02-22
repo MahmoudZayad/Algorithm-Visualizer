@@ -38,7 +38,7 @@ void updateScreen(SDL_Renderer *renderer, int gridHeight, int gridWidth, int rec
 ///// Need to add highlighting for other cell types,
 ///// maybe try drawing a translucent rectangle on top instead?
 void mouseUpdateCellHighlight(bool highlight, Cell *&cell) {
-    if (cell->start || cell->end) {return;}
+    if (cell->start || cell->end || cell->wall) {return;}
     if (highlight) {
         cell->cellFill = highlightFill;
     } else { // Unhighlight cell
@@ -47,7 +47,7 @@ void mouseUpdateCellHighlight(bool highlight, Cell *&cell) {
 }
 
 void mouseUpdateCellHighlight(bool highlight, Cell &cell) {
-    if (cell.start || cell.end) {return;}
+    if (cell.start || cell.end || cell.wall) {return;}
     if (highlight) {
         cell.cellFill = highlightFill;
     } else { // Unhighlight cell

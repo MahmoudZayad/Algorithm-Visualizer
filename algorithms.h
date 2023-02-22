@@ -6,7 +6,7 @@
 #include <tuple>
 
 #include "grid.h"
-#include "animation.h"
+#include "render.h"
 
 /*
 * Finds Coords of all children given root and grid size.

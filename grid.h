@@ -89,15 +89,15 @@ void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy, int
     r.x = calculateCellCoords(get<2>(sizexy), get<0>(sizexy)); 
     r.y = calculateCellCoords(get<1>(sizexy), get<0>(sizexy));
 
-    int hSpace = floor(gridHeight-1/2); // For Start and End Coords
-    int wSpace = floor(gridWidth/4);
+    int hSpace = gridHeight/2; // For Start and End Coords
+    int wSpace = gridWidth/4;
 
     array<int, 4> c = defaultFill;
 
-    if (r.y == hSpace && r.x == wSpace) { // Start
+    if (get<1>(sizexy) == hSpace && get<2>(sizexy) == wSpace) { // Start
         c = startFill;
     } 
-    else if (r.y == hSpace && r.x == 3*wSpace) { // End
+    else if (get<1>(sizexy) == hSpace && get<2>(sizexy) == 3*wSpace) { // End
         c = endFill;
     }
 
@@ -117,22 +117,27 @@ auto intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int r
     vector<tuple<Cell, SDL_Rect>>(gridWidth, make_tuple(Cell(), SDL_Rect())));
 
     // For start and end placement - calculate spacing
-    int hSpace = floor(gridHeight/2);
-    int wSpace = floor(gridWidth/4);
+    int hSpace = gridHeight/2;
+    int wSpace = gridWidth/4;
 
     // Add Coord data and update colors for the rectangles
     for (int i = 0; i < gridHeight; i++) {
             for (int j = 0; j < gridWidth; j++) {
                 if (i == hSpace && j == wSpace) { // Start coord
+                    cout << "SFSDFSD" << endl;
                     get<0>(grid[i][j]).start = true;
+                    get<0>(grid[i][j]).cellFill = startFill;
                 } 
                 else if (i == hSpace && j == 3*wSpace) { // End Coord
+                        cout << "SFSDFSD" << endl;
                         get<0>(grid[i][j]).end = true;
+                        get<0>(grid[i][j]).cellFill = endFill;
                 }
                 get<0>(grid[i][j]).coord = {i,j};
                 intRect(renderer, get<1>(grid[i][j]), {rectSize,i,j}, gridHeight, gridWidth);
             }
         }
+    cout << gridHeight << " " << gridWidth << endl;
 
     drawGridLines(renderer, gridHeight, gridWidth, rectSize);
     
