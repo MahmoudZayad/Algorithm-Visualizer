@@ -63,7 +63,6 @@ int main() {
                             } else { // Make it a wall
                                 wallCellUpdate(true, get<0>(grid[mouseY][mouseX]));
                             }
-
                             updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
                             break;
                         }

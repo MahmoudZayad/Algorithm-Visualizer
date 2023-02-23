@@ -1,16 +1,35 @@
 #ifndef ALGORITHM
 #define ALGORITHM
 
-#include <queue>
 #include <SDL2/SDL.h>
+#include <queue>
 #include <tuple>
+#include <map>
+#include <stack>
 
 #include "grid.h"
 #include "render.h"
 
 /*
+*  Takes map and creates stack to be used to render path
+*/
+stack<Cell> reconstructPath(map<Cell,Cell> prev, Cell end) {
+    stack<Cell> path;
+
+    Cell currentCell = end;
+    Cell previousCell;
+
+    path.push(currentCell);
+    while (!currentCell.start) {
+        previousCell = prev[currentCell];
+        path.push(previousCell);  
+        currentCell = previousCell;
+    }
+    return path;
+}
+
+/*
 * Finds Coords of all children given root and grid size.
-* Marks root as visited once complete.
 */
 array<tuple<int, int>, 4> findChildren(Cell &root, int gridWidth, int gridHeight) {
     array<tuple<int, int>, 4> children; 
@@ -47,19 +66,30 @@ array<tuple<int, int>, 4> findChildren(Cell &root, int gridWidth, int gridHeight
 }
 
 // Search Algorithms 
-void BFS(vector<vector<tuple<Cell, SDL_Rect>>> &grid, Cell &start) {
+stack<Cell> BFS(vector<vector<tuple<Cell, SDL_Rect>>> &grid, Cell &start) {
     // Declare Queue
-    queue<Cell> q;
-    start.visited = true; // Mark root visited
-    q.push(start);
+    queue<Cell> fringe;
+    map<Cell, Cell> previous;
+    Cell currentCell;
+    Cell nextCell;
+    Cell end;
 
-    while (!q.empty()) { // Run till queue is empty
-        Cell cell = q.front();
-        q.pop();
-        if (cell.end) {break;} // End of Search
+    start.visited = true; // Mark root visited
+    fringe.push(start);
+
+    while (!fringe.empty()) { // Run till queue is empty
+        currentCell = fringe.front();
+        fringe.pop();
+
+        if (currentCell.end) {  // End of Search return path
+            end = currentCell;
+            end.visited = true;
+            reconstructPath(previous, end);
+        } 
 
         // Explore children
-        array<tuple<int, int>, 4> children = findChildren(cell, grid.size(), grid[0].size());
+        array<tuple<int, int>, 4> children = findChildren(currentCell, grid.size(), grid[0].size());
+
         for (const auto &coord : children) {
             int y = get<0>(coord);
             int x = get<1>(coord);
@@ -67,9 +97,11 @@ void BFS(vector<vector<tuple<Cell, SDL_Rect>>> &grid, Cell &start) {
             // Add children to queue if they have not been visited and are not a wall
             if (!get<0>(grid[y][x]).visited && !get<0>(grid[y][x]).wall) { 
                 get<0>(grid[y][x]).visited = true;
-                q.push(get<0>(grid[y][x]));
+                fringe.push(get<0>(grid[y][x]));
+                nextCell = get<0>(grid[y][x]);
+                previous[nextCell] = currentCell;
             }          
-        } 
+        }   
     }
 }
 
