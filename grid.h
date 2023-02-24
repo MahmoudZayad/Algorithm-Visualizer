@@ -127,7 +127,6 @@ auto intializeGrid (SDL_Renderer *renderer, Cell &end, Cell &start, int gridHeig
                     get<0>(grid[i][j]).coord = {i,j};
                     get<0>(grid[i][j]).start = true;
                     get<0>(grid[i][j]).cellFill = startFill;
-                    
                     start = get<0>(grid[i][j]);
                 } 
                 else if (i == hSpace && j == 3*wSpace) { // End Coord
