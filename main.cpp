@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 #include "grid.h"
 #include "render.h"
+#include "algorithms.h"
 #include <tuple>
 
 using namespace std;
@@ -16,9 +17,12 @@ const int rectSize = 16;
 // Determine size of grid
 int gridHeight = HEIGHT/rectSize;
 int gridWidth = WIDTH/rectSize;
+Cell start;
+Cell endS;
 
 int main() {
 
+    cout << gridHeight << " " << gridWidth;
     // Intialize SDL Modules
     SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -30,7 +34,8 @@ int main() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer); // clear screen white
     
-    auto grid = intializeGrid(renderer,gridHeight, gridWidth, rectSize);
+
+    auto grid = intializeGrid(renderer, endS, start, gridHeight, gridWidth, rectSize);
     SDL_RenderPresent(renderer);
 
     // Event handling loop
@@ -50,6 +55,13 @@ int main() {
             mouseY = (e.motion.y - 1)/rectSize;
             switch (e.type){
                 // Close Window
+                case SDL_KEYDOWN:
+                    cout << "GAMERTIME";
+                    switch(e.key.keysym.sym) {
+                        case SDLK_RIGHT:  // Run BFS 
+                            cout << "GAMERTIME";
+                            BFS(grid, start, renderer, gridHeight, gridWidth, rectSize);
+                    }
                 case SDL_QUIT: 
                     running = false; 
                     break;

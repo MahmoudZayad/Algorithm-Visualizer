@@ -112,7 +112,7 @@ void intRect(SDL_Renderer *renderer, SDL_Rect &r, tuple<int,int,int> sizexy, int
 * keep track of the abstracted and presented properties of each cell on the grid.
 * For loop - updates the vector elements with their coords and rectangle colors.
 */
-auto intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int rectSize) {
+auto intializeGrid (SDL_Renderer *renderer, Cell &end, Cell &start, int gridHeight, int gridWidth, int rectSize) {
     vector<vector<tuple<Cell, SDL_Rect>>> grid(gridHeight, 
     vector<tuple<Cell, SDL_Rect>>(gridWidth, make_tuple(Cell(), SDL_Rect())));
 
@@ -124,20 +124,22 @@ auto intializeGrid (SDL_Renderer *renderer, int gridHeight, int gridWidth, int r
     for (int i = 0; i < gridHeight; i++) {
             for (int j = 0; j < gridWidth; j++) {
                 if (i == hSpace && j == wSpace) { // Start coord
-                    cout << "SFSDFSD" << endl;
+                    get<0>(grid[i][j]).coord = {i,j};
                     get<0>(grid[i][j]).start = true;
                     get<0>(grid[i][j]).cellFill = startFill;
+                    
+                    start = get<0>(grid[i][j]);
                 } 
                 else if (i == hSpace && j == 3*wSpace) { // End Coord
-                        cout << "SFSDFSD" << endl;
+                        get<0>(grid[i][j]).coord = {i,j};
                         get<0>(grid[i][j]).end = true;
                         get<0>(grid[i][j]).cellFill = endFill;
+                        end = get<0>(grid[i][j]);
                 }
                 get<0>(grid[i][j]).coord = {i,j};
                 intRect(renderer, get<1>(grid[i][j]), {rectSize,i,j}, gridHeight, gridWidth);
             }
         }
-    cout << gridHeight << " " << gridWidth << endl;
 
     drawGridLines(renderer, gridHeight, gridWidth, rectSize);
     

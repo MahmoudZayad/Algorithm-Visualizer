@@ -4,6 +4,7 @@
         "tuple": "cpp",
         "array": "cpp",
         "utility": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "ostream": "cpp"
     }
 }
