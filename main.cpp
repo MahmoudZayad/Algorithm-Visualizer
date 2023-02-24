@@ -22,7 +22,7 @@ Cell endS;
 
 int main() {
 
-    cout << gridHeight << " " << gridWidth;
+    // cout << gridHeight << " " << gridWidth;
     // Intialize SDL Modules
     SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -58,10 +58,20 @@ int main() {
                 case SDL_KEYDOWN:
                     cout << "GAMERTIME";
                     switch(e.key.keysym.sym) {
-                        case SDLK_RIGHT:  // Run BFS 
+                        case SDLK_c: // Clear screen
+                            grid = intializeGrid(renderer, endS, start, gridHeight, gridWidth, rectSize);
+                            prevHighlightedCell = nullptr;
+                            prevWallCell = nullptr;
+                            leftClick = false;
+                            break; 
+                        case SDLK_SPACE:  // Run BFS 
                             cout << "GAMERTIME";
                             BFS(grid, start, renderer, gridHeight, gridWidth, rectSize);
+                            break;
+                        default:
+                            continue;
                     }
+                    break;
                 case SDL_QUIT: 
                     running = false; 
                     break;
@@ -112,6 +122,7 @@ int main() {
                         case SDL_BUTTON_LEFT:
                             leftClick = false;
                     }
+                    break;
             }
         }
     }
