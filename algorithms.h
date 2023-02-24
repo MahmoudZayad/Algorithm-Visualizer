@@ -12,6 +12,7 @@
 #include "render.h"
 
 array<int, 4> visitedFill = {171, 146, 191, 255};  // purple
+array<int, 4> pathFill = {234, 225, 81, 255};  // yellow
 
 /*
 * Print path taken to end
@@ -20,6 +21,7 @@ array<int, 4> visitedFill = {171, 146, 191, 255};  // purple
 void printPath(stack<Cell*> path) {
 
     while (!path.empty()) {
+        
         cout << get<0>(path.top()->coord) << " " << get<1>(path.top()->coord) << endl;
         path.pop();
     }
@@ -28,18 +30,24 @@ void printPath(stack<Cell*> path) {
 /*
 *  Takes map and creates stack to be used to render path
 */
-stack<Cell*> reconstructPath(map<Cell*,Cell*> prev, Cell *&end) {
+stack<Cell*> reconstructPath(SDL_Renderer *renderer,vector<vector<tuple<Cell, SDL_Rect>>> &grid, 
+                            int rectSize, map<Cell*,Cell*> prev, Cell *&end) {
 
     stack<Cell*> path;
-
     Cell *currentCell = end;
     Cell *previousCell = nullptr;
+
+    int gridWidth = grid[0].size();
+    int gridHeight = grid.size();
 
     path.push(currentCell);
     while (!currentCell->start) {
         previousCell = prev[currentCell];
         path.push(previousCell);  
+        previousCell->cellFill = pathFill;
         currentCell = previousCell;
+        updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
+        SDL_Delay(10); // So it does not finish immediately
     }
     return path;
 }
@@ -106,7 +114,7 @@ void BFS(vector<vector<tuple<Cell, SDL_Rect>>> &grid, Cell &start,
             previous[nullptr] = currentCell;
             updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
             SDL_Delay(10); // So it does not finish immediately
-            printPath(reconstructPath(previous, end));
+            reconstructPath(renderer, grid, rectSize, previous, end);
             currentCell = nullptr;
             nextCell = nullptr;
             end = nullptr;
