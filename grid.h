@@ -26,16 +26,16 @@ extern int HEIGHT;
 * cost - cost difference to arrive to this vertex (total edge cost = |v2.cost - v1.cost|)
 */
 struct Cell {
-    bool start;
-    bool end;
-    bool visited;
-    bool wall; // Can be updated by user
-    int cost; // Default cost, can be adjusted by user
+    bool start = false;
+    bool end = false;
+    bool visited = false;
+    bool wall = false; // Can be updated by user
+    int cost = 1; // Default cost, can be adjusted by user
 
     std::tuple<int, int> coord; // maybe unnecessary
 
     // SDL Rectangle object - color
-    std::array<int,4> cellFill;
+    std::array<int,4> cellFill = defaultFill;
 };
 
 /*
