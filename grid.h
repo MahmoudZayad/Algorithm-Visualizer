@@ -7,6 +7,8 @@
 #include <iostream>
 
 #include "fills.h"
+//////////// REFACTOR STRUCT TO INCLUDE SDL_RECT AND CHANGE GRID FROM TUPLE TO CELL
+
 
 // Size of Cell
 extern int cellSize;

@@ -3,28 +3,59 @@
 #include <SDL2/SDL.h>
 #include <SDL_ttf.h>
 
-#include <string>
+#include <vector>
+#include <array>
 #include <tuple>
+#include <string>
 
 #include "fills.h"
+#include "grid.h"
 
-// Button Class
+// Button
+struct Button {
+        // Constructor
+        Button(char* text, std::tuple<int,int> coord, int height, int width);
 
-class Button {
-    public:
-        Button(std::string text, std::tuple<int,int> coord, int width, int height);
-
-        std::string text;
+        char* text = nullptr;
         std::tuple<int,int> coord;
-        SDL_Rect button;
         std::array<int, 4> fillState = buttonFill; // Blue
 
+        SDL_Rect button;
+        SDL_Texture* texture = nullptr;
 };
 
-Button::Button(std::string text, std::tuple<int,int> coord, int width, int height) {
-    Button::text = text;
-    Button::button.h = height;
-    Button::button.w = width;
-    Button::button.x = std::get<0>(coord);
-    Button::button.y = std::get<0>(coord);
-}
+/*
+ * Make a texture for text to be used on button
+*/
+SDL_Texture* makeStringTexture(SDL_Renderer* renderer, TTF_Font* font, char* text);
+
+/*
+ * Make textures for all button texts and return a vector to be used to place them on SDL_Rects
+*/
+std::vector<SDL_Texture*> makeButtonTextures(SDL_Renderer* renderer, TTF_Font* font, std::vector<char*> buttonText);
+
+/*
+* Push Button
+*/ 
+
+// Visualize
+
+// Clear Board
+
+/*
+* Radio Button
+*/
+
+// Wall
+
+// Weight
+
+// Bomb
+
+
+
+
+
+// Algorithms
+
+// Speed
