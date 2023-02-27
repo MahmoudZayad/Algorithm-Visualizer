@@ -1,28 +1,17 @@
 #include <SDL2/SDL.h>
+
 #include <iostream>
-#include <vector>
-#include <bits/stdc++.h>
+
 #include "grid.h"
 #include "render.h"
 #include "algorithms.h"
-#include <tuple>
 
-using namespace std;
 
-const int WIDTH = 640; // Temporary until I figure out what to do with resizing
-const int HEIGHT = 480;
-
-const int rectSize = 16; 
-
-// Determine size of grid
-int gridHeight = HEIGHT/rectSize;
-int gridWidth = WIDTH/rectSize;
 Cell start;
-Cell endS;
+Cell end;
 
 int main() {
 
-    // cout << gridHeight << " " << gridWidth;
     // Intialize SDL Modules
     SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -34,8 +23,8 @@ int main() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer); // clear screen white
     
+    auto grid = intializeGrid(renderer, end, start);
 
-    auto grid = intializeGrid(renderer, endS, start, gridHeight, gridWidth, rectSize);
     SDL_RenderPresent(renderer);
 
     // Event handling loop
@@ -47,26 +36,25 @@ int main() {
     Cell *prevHighlightedCell = nullptr;
     Cell *prevWallCell = nullptr;
     bool leftClick = false; 
+    bool searching = false;
 
     // Event Loop
     while (running) {
         while (SDL_PollEvent(&e)) {
-            mouseX = (e.motion.x - 1)/rectSize; // -1 is for offset caused by grid lines
-            mouseY = (e.motion.y - 1)/rectSize;
+            mouseX = (e.motion.x - 1)/cellSize; // -1 is for offset caused by grid lines
+            mouseY = (e.motion.y - 1)/cellSize;
             switch (e.type){
                 // Close Window
                 case SDL_KEYDOWN:
-                    cout << "GAMERTIME";
                     switch(e.key.keysym.sym) {
                         case SDLK_c: // Clear screen
-                            grid = intializeGrid(renderer, endS, start, gridHeight, gridWidth, rectSize);
+                            grid = intializeGrid(renderer, end, start);
                             prevHighlightedCell = nullptr;
                             prevWallCell = nullptr;
                             leftClick = false;
                             break; 
                         case SDLK_SPACE:  // Run BFS 
-                            cout << "GAMERTIME";
-                            BFS(grid, start, renderer, gridHeight, gridWidth, rectSize);
+                            BFS(grid, start, renderer);
                             break;
                         default:
                             continue;
@@ -80,42 +68,43 @@ int main() {
                         case SDL_BUTTON_LEFT: // Select Wall cell   
                             leftClick = true;                         
                             // If wall make it not a wall
-                            if (get<0>(grid[mouseY][mouseX]).wall) {
-                                wallCellUpdate(false, get<0>(grid[mouseY][mouseX]));
+                            wallCellUpdate(false, std::get<0>(grid[mouseY][mouseX]));
+                            if (std::get<0>(grid[mouseY][mouseX]).wall) {
+                                wallCellUpdate(false, std::get<0>(grid[mouseY][mouseX]));
                             } else { // Make it a wall
-                                wallCellUpdate(true, get<0>(grid[mouseY][mouseX]));
+                                wallCellUpdate(true,  std::get<0>(grid[mouseY][mouseX]));
                             }
-                            updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
+                            updateScreen(renderer, grid);
                             break;
                         }
-                case SDL_MOUSEMOTION: 
+                case SDL_MOUSEMOTION:
                     // Drag events
                     if (leftClick) {
                         // If Wall make default 
                         if (!prevWallCell) {                                    // Update ptr with first wall cell
-                            wallCellUpdate(true, get<0>(grid[mouseY][mouseX]));
-                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
-                        } else if (prevHighlightedCell->coord == get<0>(grid[mouseY][mouseX]).coord) { // Do not in same cell
+                            wallCellUpdate(true, std::get<0>(grid[mouseY][mouseX]));
+                            prevWallCell = &std::get<0>(grid[mouseY][mouseX]);
+                        } else if (prevHighlightedCell->coord == std::get<0>(grid[mouseY][mouseX]).coord) { // Do not in same cell
                             break;
-                        } else if (!get<0>(grid[mouseY][mouseX]).wall) {        // Make wall Cell
-                            wallCellUpdate(true, get<0>(grid[mouseY][mouseX])); 
-                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                        } else if (!std::get<0>(grid[mouseY][mouseX]).wall) {        // Make wall Cell
+                            wallCellUpdate(true, std::get<0>(grid[mouseY][mouseX])); 
+                            prevWallCell = &std::get<0>(grid[mouseY][mouseX]);
                         } else {                                                // Remove Wall Cell
-                            wallCellUpdate(false, get<0>(grid[mouseY][mouseX]));
-                            prevWallCell = &get<0>(grid[mouseY][mouseX]);
+                            wallCellUpdate(false, std::get<0>(grid[mouseY][mouseX]));
+                            prevWallCell = &std::get<0>(grid[mouseY][mouseX]);
                         }
                     }
                     // Highlight first cell, else if new cell unhighlight previous and highlight new
                     if (!prevHighlightedCell) { 
-                        mouseUpdateCellHighlight(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell
-                        prevHighlightedCell = &get<0>(grid[mouseY][mouseX]);
+                        mouseUpdateCellHighlight(true, std::get<0>(grid[mouseY][mouseX])); // Highlight new cell
+                        prevHighlightedCell = &std::get<0>(grid[mouseY][mouseX]);
                     } 
-                    else if (prevHighlightedCell->coord != get<0>(grid[mouseY][mouseX]).coord) {
+                    else if (prevHighlightedCell->coord != std::get<0>(grid[mouseY][mouseX]).coord) {
                         mouseUpdateCellHighlight(false, prevHighlightedCell); // Unhighlight previous cell
-                        mouseUpdateCellHighlight(true, get<0>(grid[mouseY][mouseX])); // Highlight new cell
-                        prevHighlightedCell = &get<0>(grid[mouseY][mouseX]);
+                        mouseUpdateCellHighlight(true, std::get<0>(grid[mouseY][mouseX])); // Highlight new cell
+                        prevHighlightedCell = &std::get<0>(grid[mouseY][mouseX]);
                     } 
-                    updateScreen(renderer, gridHeight, gridWidth, rectSize, grid);
+                    updateScreen(renderer, grid);
                     break;
                 case SDL_MOUSEBUTTONUP:
                     switch(e.button.button) {
