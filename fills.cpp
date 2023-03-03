@@ -1,5 +1,11 @@
 #include "fills.h"
 
+int cellSize = 16;
+
+// Pixel size of Window
+int HEIGHT = 480 + 4*16 + 1;
+int WIDTH = 640 + 1; 
+
 // Grid
 std::array<int,4> lineColor = {22, 22, 22, 255}; // Grid Lines - Barely Black
 std::array<int,4> defaultFill = {44, 44, 44, 255}; //  Dark grey

@@ -1,40 +1,35 @@
 #pragma once
 
 #include <SDL2/SDL.h>
-#include <SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <tuple>
 
 #include "fills.h"
-#include "render.h"
-
-int menuHeight = 4*16; // Size of each cell * 4
-
-auto radioFlags = {"wall", "weight", "bomb"}; // Tuple of flags for radio button
+#include "button.h"
+#include "dropdown.h"
 
 
-/*
-* Push Button
-*/ 
+struct Menu {
+    Menu();
+    int menuHeight; // Size of each cell * 4
+    int menuWidth;
 
-// Visualize
+    SDL_Rect menuBar;
 
-// Clear Board
+    // // Push Buttons
+    // extern Button visualize;
+    // extern Button clear;
 
-/*
-* Radio Button
-*/
+    // Radio Button
 
-// Wall
+    // Dropdown menu
+    DropDown algorithms;
+    // extern DropDown speed;
 
-// Weight
+};
 
-// Bomb
 
-/*
-* Dropdown Box
-*/ 
+// auto radioFlags = {"wall", "weight", "bomb"}; // Tuple of flags for radio button
 
-// Algorithms
 
-// Speed

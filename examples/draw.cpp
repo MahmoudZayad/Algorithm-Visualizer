@@ -4,7 +4,7 @@
 using namespace std;
 
 const int WIDTH = 640;
-const int HEIGHT = 480;
+const int HEIGHT = 480+(4*16);
 
 int main() {
 
