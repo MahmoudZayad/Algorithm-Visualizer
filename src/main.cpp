@@ -1,38 +1,59 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-
-#include <iostream>
-
 
 #include "render.h"
 #include "algorithms.h"
 
+#if !SDL_VERSION_ATLEAST(2,0,17)
+#error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
+#endif
+
+#include <iostream>
+
 // Fix wall click to remove wall not working
 
 Grid grid = Grid();
-Menu menu = Menu();
+RenderWindow renderWindow = RenderWindow();
+// Menu menu = Menu();
 
-int main() {
+int main(int, char**) {
 
-    // Intialize SDL Modules
-    SDL_Init(SDL_INIT_EVERYTHING);
-    TTF_Init();
+    // Setup SDL
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return -1;
+    }
 
-    // Creates window and renderWindow.renderer
-    RenderWindow renderWindow = RenderWindow();
+    // From 2.0.18: Enable native IME.
+#ifdef SDL_HINT_IME_SHOW_UI
+    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+#endif
 
-    // Render Menu
+    // Create window with SDL_Renderer graphics context
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, window_flags);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 
-    // Render Buttons
+    SDL_SetRenderDrawColor(renderer, 0,0,0,255); // Set draw color to use on renderer
+    SDL_RenderClear(renderer); // Clear the screen to black (in memory atm)
 
-    // Render Grid
-    
-    renderWindow.drawWindow(menu, grid);
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
 
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
 
-    // Event handling loop
-    bool running = true;  // Used to shut off loop
-    SDL_Event e; // Event handler
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer_Init(renderer);
+
+    // Our state
+    bool show_demo_window = true;
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+   
     int mouseX, mouseY; // Holds grid coordinates of mouse
     SDL_Point mouse;
 
@@ -40,20 +61,28 @@ int main() {
     Cell *prevHighlightedCell = nullptr;
     Cell *prevWallCell = nullptr;
     bool leftClick = false; 
-    bool searching = false;
 
-    // Event Loop
-    while (running) {
-        while (SDL_PollEvent(&e)) {
-            mouseX = (e.motion.x - 1)/cellSize; // -1 is for offset caused by grid lines
-            mouseY = (e.motion.y - 4*16 - 1)/cellSize;
+    // Main Loop
+    bool done = false;
+    while (!done) {
+        
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT)
+                done = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+                done = true;
+        
+            mouseX = (event.motion.x - 1)/cellSize; // -1 is for offset caused by grid lines
+            mouseY = (event.motion.y - 4*16 - 1)/cellSize;
 
-            mouse.x = e.motion.x;
-            mouse.y = e.motion.y;
-            switch (e.type){
+            mouse.x = event.motion.x;
+            mouse.y = event.motion.y;
+            switch (event.type){
                 // Close Window
                 case SDL_KEYDOWN:
-                    switch(e.key.keysym.sym) {
+                    switch(event.key.keysym.sym) {
                         case SDLK_c: // Clear screen
                             grid = Grid();
                             prevHighlightedCell = nullptr;
@@ -61,24 +90,16 @@ int main() {
                             leftClick = false;
                             break; 
                         case SDLK_SPACE:  // Run BFS 
-                            BFS(renderWindow, grid);
+                            // BFS(, grid);
                             break;
                         default:
                             continue;
                     }
                     break;
-                case SDL_QUIT: 
-                    running = false; 
-                    break;
                 case SDL_MOUSEBUTTONDOWN: // WORK ON DRAG EVENT
-                    switch (e.button.button) {
+                    switch (event.button.button) {
                         case SDL_BUTTON_LEFT: // Select Wall cell 
-                            leftClick = true;
-                            menu.algorithms.dropButton.clicked();
-                            for (auto &b : menu.algorithms.ddButtons) {
-                                b.clicked();
-                            }
-                                           
+                            leftClick = true;            
                             // If wall make it not a wall
                             if (mouseY >= 0) {
                                 grid.grid[mouseY][mouseX].wallCellUpdate(false);
@@ -88,17 +109,10 @@ int main() {
                                     grid.grid[mouseY][mouseX].wallCellUpdate(true);
                                 }
                             }
-                            
-                            renderWindow.drawWindow(menu, grid);
                             break;
                         }
                 case SDL_MOUSEMOTION:
                     // Drag events
-                    menu.algorithms.dropButton.update(mouse);
-                    for (auto &b : menu.algorithms.ddButtons) {
-                         b.update(mouse);
-                    }
-                
                     if (mouseY >= 0) { 
                         if (leftClick) {
                             // If Wall make default 
@@ -131,22 +145,39 @@ int main() {
                         grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
                         prevHighlightedCell = &grid.grid[mouseY][mouseX];
                     } 
-                    renderWindow.drawWindow(menu, grid);
                     break;
                 case SDL_MOUSEBUTTONUP:
-                    switch(e.button.button) {
+                    switch(event.button.button) {
                         case SDL_BUTTON_LEFT:
                             leftClick = false;
                     }
                     break;
             }
         }
+
+        // Start the Dear ImGui frame
+        ImGui_ImplSDLRenderer_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+
+        // Rendering
+        ImGui::Render();
+        SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+        SDL_RenderClear(renderer);
+        renderWindow.drawGrid(renderer, grid);
+        ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+        SDL_RenderPresent(renderer);
     }
 
-    // // SDL Destroy texture
-    // SDL_DestroyTexture(textureText);
 
-    renderWindow.destroySDL();
+    // Cleanup
+    ImGui_ImplSDLRenderer_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
+    renderWindow.destroySDL(renderer, window);
     SDL_Quit();
     return 0;
 }

@@ -3,9 +3,9 @@
 
 #include <SDL2/SDL.h>
 
-
-#include "menu.h"
-#include "dropdown.h"
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer.h"
 #include "grid.h"
 
 #include <vector>
@@ -15,23 +15,16 @@ class RenderWindow
 {	
 	public:
 		RenderWindow();
-		void drawWindow(Menu &menu, Grid &g);
-		void drawMenu(Menu &menu);
-		void drawMenuBar(Menu &Menu);
-		void drawButton(Button &button);
-		void updateDropDown(DropDown &dropDown);
-		void drawComboBox(DropDown &dropDown);
-		void drawGrid(Grid &grid);
-
-		void destroySDL();
+		void drawWindow(SDL_Renderer* renderer, Grid &g);
+		void drawGrid(SDL_Renderer* renderer, Grid &grid);
+		void destroySDL(SDL_Renderer* renderer, SDL_Window* window);
 
 		
 	private:
-	void drawGridLines(Grid &g);
-	SDL_Texture* makeStringTexture(std::string text);
-	SDL_Window* window;
-	SDL_Renderer* renderer;
-	TTF_Font* font;
+	void drawGridLines(SDL_Renderer* renderer, Grid &g);
+	// SDL_Window* window;
+	// SDL_Renderer* renderer;
+
 };
 
 
