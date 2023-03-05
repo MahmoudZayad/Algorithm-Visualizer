@@ -40,7 +40,7 @@ class Cell {
 
         std::array<int,4> getFill();
 
-        std::tuple<int, int> coord; // maybe unnecessary
+        std::tuple<int, int> coord;
         SDL_Rect cellRect;
 
     private:

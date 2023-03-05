@@ -8,9 +8,9 @@ class Grid {
         Grid();
         int getHeight();
         int getWidth();
-        
-        Cell* getStart();
-        Cell* getEnd();
+
+        Cell start;
+        Cell end;
 
         std::vector<std::vector<Cell>> grid;
         
@@ -18,9 +18,6 @@ class Grid {
     private:
         int calculateCellCoords(int coord);
         void intRect(Cell &cell, std::tuple<int,int> coord);
-
-        Cell *start = nullptr;
-        Cell *end = nullptr;
         int gridWidth;
         int gridHeight;
 };

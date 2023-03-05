@@ -54,6 +54,7 @@ void Cell::wallCellUpdate(bool isWall) {
 
 void Cell::visit() {
     visited = true;
+    if (end) {return;}
     cellFill = visitedFill;
 }
 

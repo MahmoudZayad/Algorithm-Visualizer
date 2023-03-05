@@ -10,11 +10,10 @@
 
 // Fix wall click to remove wall not working
 
-Grid grid = Grid();
-RenderWindow renderWindow = RenderWindow();
-// Menu menu = Menu();
-
 int main(int, char**) {
+    // Declare Grid
+    Grid grid = Grid();
+
 
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
@@ -28,31 +27,20 @@ int main(int, char**) {
     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 #endif
 
-    // Create window with SDL_Renderer graphics context
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, window_flags);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    // Creates window and renderWindow.renderer
+    RenderWindow rind = RenderWindow();
 
-    SDL_SetRenderDrawColor(renderer, 0,0,0,255); // Set draw color to use on renderer
-    SDL_RenderClear(renderer); // Clear the screen to black (in memory atm)
-
+    // Setup Dear ImGui context
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io =  ImGui::GetIO(); (void)io;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer_Init(renderer);
-
-    // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+    rind.setupRenderPlatform();
    
     int mouseX, mouseY; // Holds grid coordinates of mouse
     SDL_Point mouse;
@@ -71,7 +59,7 @@ int main(int, char**) {
             ImGui_ImplSDL2_ProcessEvent(&event);
             if (event.type == SDL_QUIT)
                 done = true;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(rind.getWindow()))
                 done = true;
         
             mouseX = (event.motion.x - 1)/cellSize; // -1 is for offset caused by grid lines
@@ -90,7 +78,7 @@ int main(int, char**) {
                             leftClick = false;
                             break; 
                         case SDLK_SPACE:  // Run BFS 
-                            // BFS(, grid);
+                            BFS(rind, grid, io);
                             break;
                         default:
                             continue;
@@ -156,28 +144,18 @@ int main(int, char**) {
         }
 
         // Start the Dear ImGui frame
-        ImGui_ImplSDLRenderer_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
+        rind.startImGuiFrame();
 
 
         // Rendering
-        ImGui::Render();
-        SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
-        SDL_RenderClear(renderer);
-        renderWindow.drawGrid(renderer, grid);
-        ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
-        SDL_RenderPresent(renderer);
+        rind.render(grid, io);
     }
 
 
     // Cleanup
-    ImGui_ImplSDLRenderer_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
+    rind.destroyImGui();
 
-    renderWindow.destroySDL(renderer, window);
+    rind.destroySDL();
     SDL_Quit();
     return 0;
 }

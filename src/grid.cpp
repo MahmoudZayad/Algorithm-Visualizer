@@ -1,4 +1,5 @@
 #include "grid.h"
+#include <iostream>
 
 /*
 * Properly spaces each rectangle for rendering on the grid.
@@ -7,8 +8,8 @@
 int Grid::calculateCellCoords(int coord) {return 1 + (coord*cellSize);}
 int Grid::getHeight() {return gridHeight;}
 int Grid::getWidth() {return gridWidth;}
-Cell* Grid::getStart() {return start;}
-Cell* Grid::getEnd() {return end;}
+// Cell Grid::getStart() {return start;}
+// Cell Grid::getEnd() {return end;}
  
 
 /*
@@ -35,25 +36,25 @@ Grid::Grid () {
     gridHeight = (HEIGHT-menuHeight-1)/cellSize;
     gridWidth = WIDTH/cellSize;
 
+    grid = std::vector<std::vector<Cell>>(gridHeight, std::vector<Cell>(gridWidth, Cell()));
+
     // For start and end placement - calculate spacing
     int hSpace = gridHeight/2;
     int wSpace = gridWidth/4;
 
     // Add Coord data and update colors for the rectangles
     for (int i = 0; i < gridHeight; i++) {
-        grid.push_back(std::vector<Cell>());
         for (int j = 0; j < gridWidth; j++) {
             if (i == hSpace && j == wSpace) { // Start coord
-                grid[i].push_back(Cell(true));
+                grid[i][j] = Cell(true);
                 grid[i][j].coord = {i,j};
-                start = &grid[i][j];
+                start = grid[i][j];
             } 
             else if (i == hSpace && j == 3*wSpace) { // End Coord
-                grid[i].push_back(Cell(false));
+                grid[i][j] = Cell(false);
                 grid[i][j].coord = {i,j};
-                end = &grid[i][j];
+                end = grid[i][j];
             } else {
-                grid[i].push_back(Cell());
                 grid[i][j].coord = {i,j};
             }
             intRect(grid[i][j], {i,j});

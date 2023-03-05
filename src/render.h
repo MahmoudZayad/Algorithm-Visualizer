@@ -7,7 +7,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer.h"
 #include "grid.h"
-
+#include <iostream>
 #include <vector>
 #include <tuple>
 
@@ -15,15 +15,24 @@ class RenderWindow
 {	
 	public:
 		RenderWindow();
-		void drawWindow(SDL_Renderer* renderer, Grid &g);
-		void drawGrid(SDL_Renderer* renderer, Grid &grid);
-		void destroySDL(SDL_Renderer* renderer, SDL_Window* window);
+		SDL_Renderer* getRenderer();
+		SDL_Window* getWindow();
+		void render(Grid& grid, ImGuiIO& io);
+		void destroySDL();
 
+		void setupImGuiContext();
+		void setupRenderPlatform();
+		void startImGuiFrame();
+		void destroyImGui();
+		
+		void drawGrid(Grid& grid);
 		
 	private:
-	void drawGridLines(SDL_Renderer* renderer, Grid &g);
-	// SDL_Window* window;
-	// SDL_Renderer* renderer;
+		void drawGridLines(Grid &g);
+		
+		SDL_Window* window;
+		SDL_Renderer* renderer;
+		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 };
 
