@@ -30,6 +30,7 @@ void Grid::intRect(Cell &cell, std::tuple<int,int> coord) {
 * For loop - updates the vector elements with their coords and rectangle colors.
 */
 Grid::Grid () {
+
     int menuHeight = 4*cellSize;
 
     // Determine size of grid
@@ -58,6 +59,29 @@ Grid::Grid () {
                 grid[i][j].coord = {i,j};
             }
             intRect(grid[i][j], {i,j});
+        }
+    }
+}
+
+void Grid::clearWalls() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (grid[i][j].isWall()) { 
+                grid[i][j].wallCellUpdate(false);
+            }
+            if (grid[i][j].wasVisited()) {
+                grid[i][j].clearVisited();
+            }
+        }
+    }
+}
+
+void Grid::clearSearch() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (grid[i][j].wasVisited()) {
+                grid[i][j].clearVisited();
+            }
         }
     }
 }

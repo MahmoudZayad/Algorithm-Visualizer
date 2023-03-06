@@ -22,6 +22,9 @@ extern std::array<int, 4> wallFill;
 
 extern std::array<int, 4> visitedFill;
 extern std::array<int, 4> pathFill;
+
+extern std::array<int, 4> searchingFill;
+
 // Button
 extern std::array<int, 4> buttonFill;
 extern std::array<int, 4> buttonHighlight;

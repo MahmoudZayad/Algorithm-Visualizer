@@ -20,6 +20,8 @@ std::array<int, 4> wallFill = {255, 88, 88, 255}; // red
 std::array<int, 4> visitedFill = {171, 146, 191, 255};  // purple
 std::array<int, 4> pathFill = {234, 225, 81, 255};  // yellow
 
+std::array<int, 4> searchingFill {0, 255, 0, 255}; // green
+
 // Button
 std::array<int, 4> buttonFill = {128, 164, 237, 255}; // Blue
 std::array<int, 4> buttonHighlight = {0, 137, 123, 255}; // Green

@@ -58,6 +58,12 @@ void Cell::visit() {
     cellFill = visitedFill;
 }
 
+void Cell::clearVisited() {
+    visited = false; 
+    if (start || end) {return;}
+    cellFill = defaultFill;
+}
+
 bool Cell::wasVisited() {return visited;}
 
 // Set and get Weight
@@ -70,4 +76,11 @@ bool Cell::isStart() {return start;}
 bool Cell::isEnd() {return end;}
 
 void Cell::setPathFill() {cellFill = pathFill;}
+void Cell::setSearchFill() {
+    if (end && visited) {
+        cellFill = endFill;
+        return;
+    }
+    cellFill = searchingFill;
+}
 std::array<int,4> Cell::getFill() {return cellFill;}

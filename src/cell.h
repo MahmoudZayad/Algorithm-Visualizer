@@ -28,6 +28,7 @@ class Cell {
 
         // Cell is visited and fill
         void visit();
+        void clearVisited();
         bool wasVisited(); 
 
         void setWeight();
@@ -37,6 +38,8 @@ class Cell {
         bool isEnd();
 
         void setPathFill();
+        void setSearchFill();
+
 
         std::array<int,4> getFill();
 

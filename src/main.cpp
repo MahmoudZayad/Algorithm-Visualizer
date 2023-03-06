@@ -41,6 +41,7 @@ int main(int, char**) {
     ImGui::GetStyle();
     ImVec2 padding = ImVec2(0,0);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, padding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, padding);
 
     // Setup Platform/Renderer backends
     rind.setupRenderPlatform();
@@ -55,9 +56,15 @@ int main(int, char**) {
 
     // Main Loop
     bool done = false;
+
+    static bool show_window = true;
+    bool show_algorithms = false;
+    bool show_speed = false;
+    bool menu_clicked = false;
+    bool visualize = false;
+    int algorithm = Algorithm_None;
     while (!done) {
-        static bool bfs = false;
-        
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -71,72 +78,87 @@ int main(int, char**) {
 
             mouse.x = event.motion.x;
             mouse.y = event.motion.y;
-            switch (event.type){
-                case SDL_MOUSEBUTTONDOWN: // WORK ON DRAG EVENT
-                    switch (event.button.button) {
-                        case SDL_BUTTON_LEFT: // Select Wall cell 
-                            leftClick = true;            
-                            // If wall make it not a wall
-                            if (mouseY >= 0) {
-                                grid.grid[mouseY][mouseX].wallCellUpdate(false);
-                                if (grid.grid[mouseY][mouseX].isWall()) {
+
+
+            if (!menu_clicked) {
+                switch (event.type) {
+                    case SDL_MOUSEBUTTONDOWN: // WORK ON DRAG EVENT
+                        switch (event.button.button) {
+                            case SDL_BUTTON_LEFT: // Select Wall cell 
+                                leftClick = true;            
+                                // If wall make it not a wall
+                                if (mouseY >= 0) {
                                     grid.grid[mouseY][mouseX].wallCellUpdate(false);
-                                } else { // Make it a wall
+                                    if (grid.grid[mouseY][mouseX].isWall()) {
+                                        grid.grid[mouseY][mouseX].wallCellUpdate(false);
+                                    } else { // Make it a wall
+                                        grid.grid[mouseY][mouseX].wallCellUpdate(true);
+                                    }
+                                }
+                                break;
+                            }
+                    case SDL_MOUSEMOTION:
+                        // Drag events
+                        if (mouseY >= 0) { 
+                            if (leftClick) {
+                                // If Wall make default 
+                                if (!prevWallCell) {                                 // Update ptr with first wall cell
                                     grid.grid[mouseY][mouseX].wallCellUpdate(true);
+                                    prevWallCell = &grid.grid[mouseY][mouseX];
+                                } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
+                                    break;
+                                } else if (!grid.grid[mouseY][mouseX].isWall()) {        // Make wall Cell
+                                    grid.grid[mouseY][mouseX].wallCellUpdate(true); 
+                                    prevWallCell = &grid.grid[mouseY][mouseX];
+                                } else {                                                // Remove Wall Cell
+                                    grid.grid[mouseY][mouseX].wallCellUpdate(false);
+                                    prevWallCell = &grid.grid[mouseY][mouseX];
                                 }
                             }
-                            break;
                         }
-                case SDL_MOUSEMOTION:
-                    // Drag events
-                    if (mouseY >= 0) { 
-                        if (leftClick) {
-                            // If Wall make default 
-                            if (!prevWallCell) {                                 // Update ptr with first wall cell
-                                grid.grid[mouseY][mouseX].wallCellUpdate(true);
-                                prevWallCell = &grid.grid[mouseY][mouseX];
-                            } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
-                                break;
-                            } else if (!grid.grid[mouseY][mouseX].isWall()) {        // Make wall Cell
-                                grid.grid[mouseY][mouseX].wallCellUpdate(true); 
-                                prevWallCell = &grid.grid[mouseY][mouseX];
-                            } else {                                                // Remove Wall Cell
-                                grid.grid[mouseY][mouseX].wallCellUpdate(false);
-                                prevWallCell = &grid.grid[mouseY][mouseX];
+                        // Highlight first cell, else if new cell unhighlight previous and highlight new
+                        if (mouseY < 0 || mouse.x == 0 || mouse.y == HEIGHT-1 || mouse.x == WIDTH-1) {
+                            if (prevHighlightedCell) {
+                                prevHighlightedCell->mouseHighlightUpdate(false);// Unhighlight previous cell
                             }
                         }
-                    }
-                    // Highlight first cell, else if new cell unhighlight previous and highlight new
-                    if (mouseY < 0 || mouse.x == 0 || mouse.y == HEIGHT-1 || mouse.x == WIDTH-1) {
-                        if (prevHighlightedCell) {
+                        else if (!prevHighlightedCell) { 
+                            grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
+                            prevHighlightedCell = &grid.grid[mouseY][mouseX];
+                        } 
+                        else if (prevHighlightedCell->coord != grid.grid[mouseY][mouseX].coord) {
                             prevHighlightedCell->mouseHighlightUpdate(false);// Unhighlight previous cell
+                            grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
+                            prevHighlightedCell = &grid.grid[mouseY][mouseX];
+                        } 
+                        break;
+                    case SDL_MOUSEBUTTONUP:
+                        switch(event.button.button) {
+                            case SDL_BUTTON_LEFT:
+                                leftClick = false;
                         }
-                    }
-                    else if (!prevHighlightedCell) { 
-                        grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
-                        prevHighlightedCell = &grid.grid[mouseY][mouseX];
-                    } 
-                    else if (prevHighlightedCell->coord != grid.grid[mouseY][mouseX].coord) {
-                        prevHighlightedCell->mouseHighlightUpdate(false);// Unhighlight previous cell
-                        grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
-                        prevHighlightedCell = &grid.grid[mouseY][mouseX];
-                    } 
-                    break;
-                case SDL_MOUSEBUTTONUP:
-                    switch(event.button.button) {
-                        case SDL_BUTTON_LEFT:
-                            leftClick = false;
-                    }
-                    break;
+                        break;
+                }
             }
         }
 
-        // Start the Dear ImGui frame
-        rind.startImGuiFrame();
+        if (visualize) {
+            visualize = false;
+            BFS(rind, grid, io);
+        }
 
+        // if (algorithm == Algorithm_BFS && show_algorithms) {
+        //     show_algorithms = false;
+        //     menu_clicked = false;
+        // }
+        
+        
+
+
+        // Start the Dear ImGui frame
+        rind.startImGuiFrame(); 
+        
         {
-            // static float f = 0.0f;
-            static bool show_window = true;
             static int counter = 0; 
             static ImVec2 pos = ImVec2(0,0);
             static ImVec2 windowSize = ImVec2(640,4*16);
@@ -147,70 +169,61 @@ int main(int, char**) {
             ImGui::SetNextWindowSize(windowSize);
             ImGui::Begin("Buttons", &show_window, ImGuiWindowFlags_NoDecoration |  ImGuiWindowFlags_NoMove); // Remove Bar
 
-            // const char* items[] = {"BFS", "DFS"};
-            // static int item_current_idx = 0; // Here we store our selection data as an index.
-            // const char* combo_preview_value = items[item_current_idx];  // Pass in the preview value visible before opening the combo (it could be anything)
-
-            // ImGui::SetNextWindowSizeConstraints(buttonSize, buttonSize);
-            // if (ImGui::BeginCombo("Algorithms", "", ImGuiComboFlags_NoPreview))
-            // {
-            //     for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-            //     {
-            //         const bool is_selected = (item_current_idx == n);
-            //         if (ImGui::Selectable(items[n], is_selected))
-            //             item_current_idx = n;
-
-            //         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            //         if (is_selected)
-            //             ImGui::SetItemDefaultFocus();
-            //     }
-            //     ImGui::EndCombo();
-            // }
-
             if (ImGui::Button("Algorithms", buttonSize)) {
-                bfs = true;
+                if (show_algorithms) {
+                    show_algorithms = false;
+                    menu_clicked = false;
+                } else {
+                    show_algorithms = true;
+                    menu_clicked = true;
+                    show_speed = false;
+                }
             }                
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("Speed", buttonSize))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
+            if (ImGui::Button("Speed", buttonSize)){
+                if (show_speed) {
+                    show_speed = false;
+                    menu_clicked = false;
+                } else {
+                    show_speed = true;
+                    menu_clicked = true;
+                    show_algorithms = false;
+                }
+            }
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("Visualize", buttonSize))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
+            if (ImGui::Button("Visualize", buttonSize))
+                visualize = true;
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("Clear", buttonSize)) {
-                grid = Grid();
+            if (ImGui::Button("Clear Walls", buttonSize)) {
+                grid.clearWalls();
                 prevHighlightedCell = nullptr;
                 prevWallCell = nullptr;
                 leftClick = false;
             }                       
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("SCoobieofs", buttonSize))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
+            if (ImGui::Button("Clear Search", buttonSize)) {
+                grid.clearSearch();
+                prevHighlightedCell = nullptr;
+                prevWallCell = nullptr;
+                leftClick = false;
+            }
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("BEE", buttonSize))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+            if (ImGui::Button("BEE", buttonSize))
                 counter++;
-            
-            // ImGui::Text("counter = %d", counter);
-
-            // ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
-        // // 3. Show another simple window.
-        // if (show_another_window)
-        // {
-        //     ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        //     ImGui::Text("Hello from another window!");
-        //     if (ImGui::Button("Close Me"))
-        //         show_another_window = false;
-        //     ImGui::End();
-        // }
-
-        if (bfs) {
-            BFS(rind, grid, io);
-            bfs = false;
+        // Algorithms Menu
+        if (show_algorithms) {
+            show_speed = false;
+            algorithmsMenu(show_algorithms, algorithm);
+        } else if (show_speed) {
+            show_algorithms = false;
+            speedMenu(show_speed);
+        } else {
+            menu_clicked = false;
         }
-
+    
         // Rendering
         rind.render(grid, io);
     }

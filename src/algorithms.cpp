@@ -2,6 +2,80 @@
 #include <iostream>
 
 
+int speed = Speed_Normal;
+
+/*
+* Algorithm Menu
+*/
+void algorithmsMenu(bool &show_algorithms, int& algorithm) {
+
+    static ImVec2 menuPos = ImVec2(4, (4*16) + 4);
+    static ImVec2 menuSize = ImVec2((642/6) + 5*16 ,14*16);
+    static ImVec2 dropSize = ImVec2((642/6) + 5*16,2*16);
+    
+    ImGui::SetNextWindowPos(menuPos);
+    // ImGui::SetNextWindowBgAlpha(0.0f);  // Make Transparent
+    ImGui::SetNextWindowSize(menuSize);
+    ImGui::Begin("Menu", &show_algorithms,  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove); 
+    
+    if (ImGui::Button("Breadth-first Search", dropSize))  {
+        algorithm = Algorithm_BFS;
+        show_algorithms = false;
+    }                          
+    if (ImGui::Button("Depth-first Search", dropSize))  {
+        algorithm = Algorithm_DFS;
+        show_algorithms = false;
+    }                          
+    if (ImGui::Button("Iterative Deepening Search", dropSize)) {
+        algorithm = Algorithm_IDS;
+        show_algorithms = false;
+    }                                 
+    if (ImGui::Button("Uniform-cost Search", dropSize)) {
+        algorithm = Algorithm_UCS;
+        show_algorithms = false;
+    }                      
+    if (ImGui::Button("Greedy Best-first Search", dropSize)) {
+        algorithm = Algorithm_Greedy;
+        show_algorithms = false;
+    }
+    if (ImGui::Button("Dijkstra's Algorithm", dropSize)) {
+        algorithm = Algorithm_Dijkstra;
+        show_algorithms = false;
+    }                        
+    if (ImGui::Button("A* Search", dropSize)) {
+        algorithm = Algorithm_AStar;
+        show_algorithms = false;
+    }
+    ImGui::End();
+}
+
+void speedMenu(bool &show_speed) {
+
+    static ImVec2 menuPos = ImVec2(4 + (642/6), (4*16) + 4);
+    static ImVec2 menuSize = ImVec2(4*16 ,6*16);
+    static ImVec2 dropSize = ImVec2(4*16, 2*16);
+    
+    ImGui::SetNextWindowPos(menuPos);
+    // ImGui::SetNextWindowBgAlpha(0.0f);  // Make Transparent
+    ImGui::SetNextWindowSize(menuSize);
+    ImGui::Begin("Menu", &show_speed,  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove); 
+    
+    if (ImGui::Button("Fast", dropSize))  {
+        speed = Speed_Fast;
+        show_speed = false;
+    }                          
+    if (ImGui::Button("Normal", dropSize))  {
+        speed = Speed_Normal;
+        show_speed = false;
+    }   
+    if (ImGui::Button("Slow", dropSize))  {
+        speed = Speed_Slow;
+        show_speed = false;
+    }                               
+    ImGui::End();
+}
+
+
 /*
 * Print path taken to end
 */
@@ -31,7 +105,7 @@ std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiI
         previousCell->setPathFill();
         currentCell = previousCell;
         renderWindow.render(grid,io);
-        SDL_Delay(10); // So it does not finish immediately
+        SDL_Delay(speed); // So it does not finish immediately
     }
     return path;
 }
@@ -97,7 +171,7 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
             end = currentCell;
             previous[nullptr] = currentCell;
             renderWindow.render(g,io);
-            SDL_Delay(10); // So it does not finish immediately
+            SDL_Delay(speed); // So it does not finish immediately
             reconstructPath(renderWindow, g, io, previous, end);
             currentCell = nullptr;
             nextCell = nullptr;
@@ -119,6 +193,10 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
             // Add children to queue if they have not been visited and are not a wall
             if (!g.grid[y][x].wasVisited() && !g.grid[y][x].isWall() && !g.grid[y][x].isStart()) { 
                 
+                // Show Current Cell that is being visited
+                g.grid[y][x].setSearchFill();
+                renderWindow.render(g, io);
+                SDL_Delay(speed);
                 g.grid[y][x].visit();
             
                 nextCell = &g.grid[y][x];
@@ -126,7 +204,11 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
                 
                 previous[nextCell] = currentCell;
                 renderWindow.render(g, io);
-                SDL_Delay(10); // So it does not finish immediately
+                SDL_Delay(speed); // So it does not finish immediately
+
+                if (g.grid[y][x].isEnd()) { // If it was an end node reset its fill back to end fill
+                    g.grid[y][x].setSearchFill();
+                }
             }          
         }   
     }

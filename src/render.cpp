@@ -105,4 +105,3 @@ void RenderWindow::drawGridLines(Grid &g) {
         SDL_RenderDrawLine(renderer, 0, 4*16 + y, windowWidth, 4*16+ y);
     }
 }
-
