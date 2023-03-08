@@ -44,7 +44,7 @@ class Cell {
         std::array<int,4> getFill();
 
         std::tuple<int, int> coord;
-        SDL_Rect cellRect;
+        SDL_FRect cellRect;
 
     private:
         bool start;

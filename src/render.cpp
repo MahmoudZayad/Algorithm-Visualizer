@@ -20,7 +20,8 @@ void RenderWindow::render(Grid& g, ImGuiIO& io) {
     // Rendering
     ImGui::Render();
     SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-    SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+    // SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+    SDL_SetRenderDrawColor(renderer,44, 44, 44, 255);
     SDL_RenderClear(renderer);
     drawGrid(g);
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
@@ -71,18 +72,60 @@ void RenderWindow::destroyImGui() {
 
 void RenderWindow::drawGrid(Grid &g) {
 
+    std::array<int, 4> c;
+    
+    c = defaultFill;
+    SDL_SetRenderDrawColor(renderer, c[0], c[1], c[2], c[3]);
     // Update all cells on grid
     for (int i = 0; i < g.getHeight(); i++) {
         for (int j = 0; j < g.getWidth(); j++) {
-            std::array<int, 4> c = g.grid[i][j].getFill(); // Checks Cell Color
+            c = g.grid[i][j].getFill(); // Checks Cell Color
             SDL_SetRenderDrawColor(renderer, c[0], c[1], c[2], c[3]);
-            SDL_RenderFillRect(renderer, &g.grid[i][j].cellRect);
+            SDL_RenderFillRectF(renderer, &g.grid[i][j].cellRect);
         }
     }
     // Redraw Lines
     drawGridLines(g);
+    c = defaultFill;
+    SDL_SetRenderDrawColor(renderer, c[0], c[1], c[2], c[3]);
 }
 
+std::queue<Cell> RenderWindow::animateCell(Grid g, int i, int j) {
+
+    // {x, y, w, h}
+    float x = g.grid[i][j].cellRect.x;
+    float y = g.grid[i][j].cellRect.y;
+
+    float w = g.grid[i][j].cellRect.w;
+    float h = g.grid[i][j].cellRect.h;
+
+    std::queue<Cell> anim;
+
+    
+    // Grow from 8px square to 16px
+    for (int k = 8; k >= 0; k--) { 
+        g.grid[i][j].cellRect = {x + (k/2), y + (k/2), w - k, h - k };
+        anim.push(g.grid[i][j]);
+    }
+
+    //Draw cell Oversized by 2px
+
+    for (int k = 0; k <= 2; k++) { 
+        g.grid[i][j].cellRect = {x - (k/2), y - (k/2), w + k, h + k };
+        anim.push(g.grid[i][j]);
+    }
+    
+
+    for (int k = 2; k >= 0; k--) { 
+        g.grid[i][j].cellRect = {x + (k/2), y + (k/2), w - k, h - k };
+        anim.push(g.grid[i][j]);
+    }
+
+    g.grid[i][j].cellRect = {x, y, w, h};
+    anim.push(g.grid[i][j]);
+
+    return anim;
+}
 
 /*
 * Draws lines for the grid, windowWidth and windowHeight are calculated to create bounds

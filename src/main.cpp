@@ -1,5 +1,6 @@
 
 #include "render.h"
+#include <utility>
 #include "algorithms.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
@@ -8,11 +9,15 @@
 
 #include <iostream>
 
-// Fix wall click to remove wall not working
+RenderWindow rind;
+Grid grid;
+
+std::vector<std::vector<std::queue<Cell>>> animGrid(grid.getHeight(), std::vector<std::queue<Cell>>(grid.getWidth(), std::queue<Cell>()));
 
 int main(int, char**) {
+    
     // Declare Grid
-    Grid grid = Grid();
+    grid = Grid();
 
 
     // Setup SDL
@@ -28,9 +33,9 @@ int main(int, char**) {
 #endif
 
     // Creates window and renderWindow.renderer
-    RenderWindow rind = RenderWindow();
+    rind = RenderWindow();
 
-    // Setup Dear ImGui context
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -63,6 +68,8 @@ int main(int, char**) {
     bool menu_clicked = false;
     bool visualize = false;
     int algorithm = Algorithm_None;
+    int counter = 0; 
+
     while (!done) {
 
         SDL_Event event;
@@ -88,11 +95,11 @@ int main(int, char**) {
                                 leftClick = true;            
                                 // If wall make it not a wall
                                 if (mouseY >= 0) {
-                                    grid.grid[mouseY][mouseX].wallCellUpdate(false);
                                     if (grid.grid[mouseY][mouseX].isWall()) {
                                         grid.grid[mouseY][mouseX].wallCellUpdate(false);
                                     } else { // Make it a wall
                                         grid.grid[mouseY][mouseX].wallCellUpdate(true);
+                                        animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
                                     }
                                 }
                                 break;
@@ -105,11 +112,13 @@ int main(int, char**) {
                                 if (!prevWallCell) {                                 // Update ptr with first wall cell
                                     grid.grid[mouseY][mouseX].wallCellUpdate(true);
                                     prevWallCell = &grid.grid[mouseY][mouseX];
+                                    animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
                                 } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
                                     break;
                                 } else if (!grid.grid[mouseY][mouseX].isWall()) {        // Make wall Cell
                                     grid.grid[mouseY][mouseX].wallCellUpdate(true); 
                                     prevWallCell = &grid.grid[mouseY][mouseX];
+                                    animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
                                 } else {                                                // Remove Wall Cell
                                     grid.grid[mouseY][mouseX].wallCellUpdate(false);
                                     prevWallCell = &grid.grid[mouseY][mouseX];
@@ -147,19 +156,10 @@ int main(int, char**) {
             BFS(rind, grid, io);
         }
 
-        // if (algorithm == Algorithm_BFS && show_algorithms) {
-        //     show_algorithms = false;
-        //     menu_clicked = false;
-        // }
-        
-        
-
-
         // Start the Dear ImGui frame
         rind.startImGuiFrame(); 
         
         {
-            static int counter = 0; 
             static ImVec2 pos = ImVec2(0,0);
             static ImVec2 windowSize = ImVec2(640,4*16);
             static ImVec2 buttonSize = ImVec2((642/6),4*16);
@@ -191,8 +191,12 @@ int main(int, char**) {
                 }
             }
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("Visualize", buttonSize))
+            if (ImGui::Button("Visualize", buttonSize)) {
                 visualize = true;
+                show_speed = false;
+                menu_clicked = false;
+                show_algorithms = false;
+            }
             ImGui::SameLine(0.0f, 0.0f);
             if (ImGui::Button("Clear Walls", buttonSize)) {
                 grid.clearWalls();
@@ -223,16 +227,23 @@ int main(int, char**) {
         } else {
             menu_clicked = false;
         }
-    
+
         // Rendering
+        for (int i = 0; i < grid.getHeight(); i++) {
+            for (int j = 0; j < grid.getWidth(); j++) {
+                if (!animGrid[i][j].empty()) {
+                    grid.grid[i][j] = animGrid[i][j].front();
+                    animGrid[i][j].pop();
+                }
+            }
+        }
+
         rind.render(grid, io);
     }
-
-
     // Cleanup
     rind.destroyImGui();
-
     rind.destroySDL();
     SDL_Quit();
+
     return 0;
 }

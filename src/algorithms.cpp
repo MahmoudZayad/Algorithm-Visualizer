@@ -104,7 +104,7 @@ std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiI
         path.push(previousCell);  
         previousCell->setPathFill();
         currentCell = previousCell;
-        renderWindow.render(grid,io);
+        // renderWindow.render(grid,io);
         SDL_Delay(speed); // So it does not finish immediately
     }
     return path;
@@ -170,7 +170,7 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
         if (currentCell->isEnd()) {  // End of Search return path
             end = currentCell;
             previous[nullptr] = currentCell;
-            renderWindow.render(g,io);
+            // renderWindow.render(g,io);
             SDL_Delay(speed); // So it does not finish immediately
             reconstructPath(renderWindow, g, io, previous, end);
             currentCell = nullptr;
@@ -195,7 +195,7 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
                 
                 // Show Current Cell that is being visited
                 g.grid[y][x].setSearchFill();
-                renderWindow.render(g, io);
+                // renderWindow.render(g, io);
                 SDL_Delay(speed);
                 g.grid[y][x].visit();
             
@@ -203,7 +203,7 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
                 fringe.push(nextCell);
                 
                 previous[nextCell] = currentCell;
-                renderWindow.render(g, io);
+                // renderWindow.render(g, io);
                 SDL_Delay(speed); // So it does not finish immediately
 
                 if (g.grid[y][x].isEnd()) { // If it was an end node reset its fill back to end fill

@@ -2,6 +2,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_thread.h>
 
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -9,6 +10,7 @@
 #include "grid.h"
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <tuple>
 
 class RenderWindow 
@@ -26,6 +28,7 @@ class RenderWindow
 		void destroyImGui();
 		
 		void drawGrid(Grid& grid);
+		std::queue<Cell> animateCell(Grid g, int i, int j);
 		
 	private:
 		void drawGridLines(Grid &g);
@@ -35,21 +38,3 @@ class RenderWindow
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 };
-
-
-
-
-
-
-// /*
-//  * Make textures for all button texts and return a vector to be used to place them on SDL_Rects
-// */
-// std::vector<SDL_Texture*> makeButtonTextures(SDL_Renderer* renderer, TTF_Font* font, std::vector<char*> buttonText) {
-//     std::vector<SDL_Texture*> textures;
-    
-//     for (auto &text : buttonText) {
-//         textures.push_back(makeStringTexture(renderer, font, text));
-//     }
-
-//     return textures;
-// }
