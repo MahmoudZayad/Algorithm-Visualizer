@@ -9,15 +9,11 @@
 
 #include <iostream>
 
-RenderWindow rind;
-Grid grid;
-
-std::vector<std::vector<std::queue<Cell>>> animGrid(grid.getHeight(), std::vector<std::queue<Cell>>(grid.getWidth(), std::queue<Cell>()));
 
 int main(int, char**) {
     
     // Declare Grid
-    grid = Grid();
+    Grid grid = Grid();
 
 
     // Setup SDL
@@ -33,7 +29,9 @@ int main(int, char**) {
 #endif
 
     // Creates window and renderWindow.renderer
-    rind = RenderWindow();
+    RenderWindow rind = RenderWindow();
+
+    std::vector<std::vector<std::queue<Cell>>> animGrid(grid.getHeight(), std::vector<std::queue<Cell>>(grid.getWidth(), std::queue<Cell>()));
 
 
     // Setup Dear ImGui context
@@ -55,8 +53,9 @@ int main(int, char**) {
     SDL_Point mouse;
 
     // Used to point to cells that need to be updated
-    Cell *prevHighlightedCell = nullptr;
-    Cell *prevWallCell = nullptr;
+    Cell* prevHighlightedCell = nullptr;
+    Cell* prevWallCell = nullptr;
+    Cell* prevWeightCell = nullptr;
     bool leftClick = false; 
 
     // Main Loop
@@ -64,11 +63,14 @@ int main(int, char**) {
 
     static bool show_window = true;
     bool show_algorithms = false;
+    bool show_weights = false;
     bool show_speed = false;
     bool menu_clicked = false;
     bool visualize = false;
+    const char* viz = "Visualize";
     int algorithm = Algorithm_None;
-    int counter = 0; 
+    int wei_num = Draw_Wall;
+
 
     while (!done) {
 
@@ -81,7 +83,7 @@ int main(int, char**) {
                 done = true;
         
             mouseX = (event.motion.x - 1)/cellSize; // -1 is for offset caused by grid lines
-            mouseY = (event.motion.y - 4*16 - 1)/cellSize;
+            mouseY = (event.motion.y - 4*16)/cellSize;
 
             mouse.x = event.motion.x;
             mouse.y = event.motion.y;
@@ -95,51 +97,84 @@ int main(int, char**) {
                                 leftClick = true;            
                                 // If wall make it not a wall
                                 if (mouseY >= 0) {
-                                    if (grid.grid[mouseY][mouseX].isWall()) {
-                                        grid.grid[mouseY][mouseX].wallCellUpdate(false);
-                                    } else { // Make it a wall
-                                        grid.grid[mouseY][mouseX].wallCellUpdate(true);
-                                        animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                    switch(wei_num) {
+                                        case Draw_Wall:
+                                             if (grid.grid[mouseY][mouseX].isWall()) {
+                                                grid.grid[mouseY][mouseX].wallCellUpdate(false);
+                                            } else { // Make it a wall
+                                                grid.grid[mouseY][mouseX].wallCellUpdate(true);
+                                                animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                            }
+                                            break;
+                                        case Draw_Weights:
+                                            if (grid.grid[mouseY][mouseX].getWeight() == 15) {
+                                                grid.grid[mouseY][mouseX].weightCellUpdate(false);
+                                            } else { // Make it a wall
+                                                grid.grid[mouseY][mouseX].weightCellUpdate(true);
+                                                animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                            }
+                                            break;
                                     }
                                 }
                                 break;
                             }
                     case SDL_MOUSEMOTION:
                         // Drag events
-                        if (mouseY >= 0) { 
+                        if (mouseY >= 0 && mouseY < grid.getHeight()) { 
                             if (leftClick) {
                                 // If Wall make default 
-                                if (!prevWallCell) {                                 // Update ptr with first wall cell
-                                    grid.grid[mouseY][mouseX].wallCellUpdate(true);
-                                    prevWallCell = &grid.grid[mouseY][mouseX];
-                                    animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
-                                } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
-                                    break;
-                                } else if (!grid.grid[mouseY][mouseX].isWall()) {        // Make wall Cell
-                                    grid.grid[mouseY][mouseX].wallCellUpdate(true); 
-                                    prevWallCell = &grid.grid[mouseY][mouseX];
-                                    animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
-                                } else {                                                // Remove Wall Cell
-                                    grid.grid[mouseY][mouseX].wallCellUpdate(false);
-                                    prevWallCell = &grid.grid[mouseY][mouseX];
+                                switch(wei_num) {
+                                    case Draw_Wall:
+                                        if (!prevWallCell) {                                 // Update ptr with first wall cell
+                                            grid.grid[mouseY][mouseX].wallCellUpdate(true);
+                                            prevWallCell = &grid.grid[mouseY][mouseX];
+                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                        } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
+                                            continue;
+                                        } else if (!grid.grid[mouseY][mouseX].isWall()) {        // Make wall Cell
+                                            grid.grid[mouseY][mouseX].wallCellUpdate(true); 
+                                            prevWallCell = &grid.grid[mouseY][mouseX];
+                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                        } else {                                                // Remove Wall Cell
+                                            grid.grid[mouseY][mouseX].wallCellUpdate(false);
+                                            prevWallCell = &grid.grid[mouseY][mouseX];
+                                        }
+                                        break;
+                                    case Draw_Weights:
+                                         if (!prevWeightCell) {                                 // Update ptr with first weight cell
+                                            grid.grid[mouseY][mouseX].weightCellUpdate(true);
+                                            prevWeightCell = &grid.grid[mouseY][mouseX];
+                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                        } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
+                                            continue;
+                                        } else if (grid.grid[mouseY][mouseX].getWeight() == 1) {        // Make Weight Cell
+                                            grid.grid[mouseY][mouseX].weightCellUpdate(true); 
+                                            prevWeightCell = &grid.grid[mouseY][mouseX];
+                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                        } else {                                                // Remove Weight Cell
+                                            grid.grid[mouseY][mouseX].weightCellUpdate(false);
+                                            prevWeightCell = &grid.grid[mouseY][mouseX];
+                                        }
+                                        break;
+                                }
+
+                            }
+                            // unhighlight cell if mouse goes off screen
+                            if (mouse.y < 4*16 + 1 || mouse.x == 0 || mouse.y == HEIGHT-1 || mouse.x == WIDTH-1) {
+                                if (prevHighlightedCell) {
+                                    prevHighlightedCell->mouseHighlightUpdate(false);// Unhighlight previous cell
                                 }
                             }
-                        }
-                        // Highlight first cell, else if new cell unhighlight previous and highlight new
-                        if (mouseY < 0 || mouse.x == 0 || mouse.y == HEIGHT-1 || mouse.x == WIDTH-1) {
-                            if (prevHighlightedCell) {
+                            else if (!prevHighlightedCell) { 
+                                grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
+                                prevHighlightedCell = &grid.grid[mouseY][mouseX];
+                            } 
+                            else if (prevHighlightedCell->coord != grid.grid[mouseY][mouseX].coord) {
                                 prevHighlightedCell->mouseHighlightUpdate(false);// Unhighlight previous cell
-                            }
+                                grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
+                                prevHighlightedCell = &grid.grid[mouseY][mouseX];
+                            } 
                         }
-                        else if (!prevHighlightedCell) { 
-                            grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
-                            prevHighlightedCell = &grid.grid[mouseY][mouseX];
-                        } 
-                        else if (prevHighlightedCell->coord != grid.grid[mouseY][mouseX].coord) {
-                            prevHighlightedCell->mouseHighlightUpdate(false);// Unhighlight previous cell
-                            grid.grid[mouseY][mouseX].mouseHighlightUpdate(true); // Highlight new cell
-                            prevHighlightedCell = &grid.grid[mouseY][mouseX];
-                        } 
                         break;
                     case SDL_MOUSEBUTTONUP:
                         switch(event.button.button) {
@@ -153,7 +188,14 @@ int main(int, char**) {
 
         if (visualize) {
             visualize = false;
-            BFS(rind, grid, io);
+            switch(algorithm) {
+                case Algorithm_BFS:
+                    BFS(rind, grid, io);
+                case Algorithm_DFS:
+                    DFS(rind, grid, io);
+                case Algorithm_IDS:
+                    IDS(rind, grid, io);
+            }
         }
 
         // Start the Dear ImGui frame
@@ -177,6 +219,7 @@ int main(int, char**) {
                     show_algorithms = true;
                     menu_clicked = true;
                     show_speed = false;
+                    show_weights = false;
                 }
             }                
             ImGui::SameLine(0.0f, 0.0f);
@@ -188,14 +231,16 @@ int main(int, char**) {
                     show_speed = true;
                     menu_clicked = true;
                     show_algorithms = false;
+                    show_weights = false;
                 }
             }
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("Visualize", buttonSize)) {
+            if (ImGui::Button(viz, buttonSize)) {
                 visualize = true;
                 show_speed = false;
                 menu_clicked = false;
                 show_algorithms = false;
+                show_weights = false;
             }
             ImGui::SameLine(0.0f, 0.0f);
             if (ImGui::Button("Clear Walls", buttonSize)) {
@@ -212,18 +257,33 @@ int main(int, char**) {
                 leftClick = false;
             }
             ImGui::SameLine(0.0f, 0.0f);
-            if (ImGui::Button("BEE", buttonSize))
-                counter++;
+            if (ImGui::Button(" Walls n\'\nWeights", buttonSize)) {
+                if (show_weights) {
+                    show_weights = false;
+                    menu_clicked = false;
+                } else {
+                    show_weights = true;
+                    menu_clicked = true;
+                    show_speed = false;
+                    show_algorithms = false;
+                }
+            }
             ImGui::End();
         }
 
-        // Algorithms Menu
+        // Menus
         if (show_algorithms) {
             show_speed = false;
+            show_weights = false;
             algorithmsMenu(show_algorithms, algorithm);
         } else if (show_speed) {
             show_algorithms = false;
+            show_weights = false;
             speedMenu(show_speed);
+        } else if (show_weights) {
+            show_algorithms = false;
+            show_speed = false;
+            weightMenu(show_weights, wei_num);
         } else {
             menu_clicked = false;
         }
@@ -236,6 +296,12 @@ int main(int, char**) {
                     animGrid[i][j].pop();
                 }
             }
+        }  
+
+        if (algorithm == Algorithm_None) {
+            viz = " Pick an \nAlgorithm";
+        } else {
+            viz = "Visualize!";
         }
 
         rind.render(grid, io);

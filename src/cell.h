@@ -32,7 +32,9 @@ class Cell {
         bool wasVisited(); 
 
         void setWeight();
+        void resetWeight();
         int getWeight();
+        void weightCellUpdate(bool isWeight);
 
         bool isStart();
         bool isEnd();
@@ -45,6 +47,7 @@ class Cell {
 
         std::tuple<int, int> coord;
         SDL_FRect cellRect;
+        int index;
 
     private:
         bool start;

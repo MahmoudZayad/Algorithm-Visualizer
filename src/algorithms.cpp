@@ -1,3 +1,5 @@
+
+
 #include "algorithms.h"
 #include <iostream>
 
@@ -75,6 +77,32 @@ void speedMenu(bool &show_speed) {
     ImGui::End();
 }
 
+void weightMenu(bool &show_weights, int& weight) {
+
+    static ImVec2 menuPos = ImVec2(4 + 642 - (642/6), (4*16) + 4);
+    static ImVec2 menuSize = ImVec2(4*16 ,6*16);
+    static ImVec2 dropSize = ImVec2(4*16, 2*16);
+    
+    ImGui::SetNextWindowPos(menuPos);
+    // ImGui::SetNextWindowBgAlpha(0.0f);  // Make Transparent
+    ImGui::SetNextWindowSize(menuSize);
+    ImGui::Begin("Menu", &show_weights,  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove); 
+    
+    if (ImGui::Button("Walls", dropSize))  {
+        weight = Draw_Wall;
+        show_weights = false;
+    }                          
+    if (ImGui::Button("Weights", dropSize))  {
+        weight = Draw_Weights;
+        show_weights = false;
+    }
+    if (ImGui::Button("Bombs", dropSize))  {
+        weight = Draw_Bombs;
+        show_weights = false;
+    }                           
+    ImGui::End();
+}
+
 
 /*
 * Print path taken to end
@@ -104,7 +132,7 @@ std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiI
         path.push(previousCell);  
         previousCell->setPathFill();
         currentCell = previousCell;
-        // renderWindow.render(grid,io);
+        renderWindow.render(grid,io);
         SDL_Delay(speed); // So it does not finish immediately
     }
     return path;
@@ -117,30 +145,30 @@ std::array<std::tuple<int, int>, 4> findChildren(Grid &g, Cell *&root) {
 
     std::array<std::tuple<int, int>, 4> children;  // Coords of neighbors
 
-    int rootX = std::get<0>(root->coord);
-    int rootY = std::get<1>(root->coord);
+    int rootY = std::get<0>(root->coord);
+    int rootX = std::get<1>(root->coord);
 
     // Check Above
-    if (rootX - 1 >= 0){
-        children[0] = std::make_tuple(rootX-1, rootY);
+    if (rootY - 1 >= 0){
+        children[0] = std::make_tuple(rootY - 1, rootX);
     }  else { 
         children[0] = std::make_tuple(-1,-1); 
     }
     // Check Right
-    if (rootY + 1 < g.getWidth()){
-        children[1] = std::make_tuple(rootX, rootY + 1);
+    if (rootX + 1 < g.getWidth()){
+        children[1] = std::make_tuple(rootY, rootX + 1);
     }  else { 
         children[1] = std::make_tuple(-1,-1); 
     }
     // Check Below
-    if (rootX + 1 < g.getHeight()){
-        children[2] = std::make_tuple(rootX + 1, rootY);
+    if (rootY + 1 < g.getHeight()){
+        children[2] = std::make_tuple(rootY + 1, rootX);
     }  else { 
         children[2] = std::make_tuple(-1,-1); 
     }
     // Check Behind
-    if (rootY - 1 >= 0){
-        children[3] = std::make_tuple(rootX, rootY - 1);
+    if (rootX - 1 >= 0){
+        children[3] = std::make_tuple(rootY, rootX - 1);
     }  else { 
         children[3] = std::make_tuple(-1,-1); 
     }
@@ -148,68 +176,326 @@ std::array<std::tuple<int, int>, 4> findChildren(Grid &g, Cell *&root) {
     return children;
 }
 
+
 // Search Algorithms 
-void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
+
+// General Search
+void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::function<bool(Cell*,Cell*)> func) {
     
-    // Declare Queue
-    std::queue<Cell*> fringe;
+    // Declare Queue and Map for path
+        // auto compare = [](Cell* a, Cell* b) {return a->index > b->index;};
+    // generalSearch(renderWindow, g, io, compare);
+    std::priority_queue<Cell*, std::vector<Cell*>, decltype(func)> fringe(func);
     std::map<Cell*, Cell*> previous;
+    
+
+    // Temp pointers
     Cell *currentCell = nullptr;
     Cell *nextCell = nullptr;
-    Cell *end = nullptr;
 
-   
-    currentCell = &g.start;
-    currentCell->visit(); // Mark root visited
+    int index = 1;
+
+    currentCell = &g.start; // Root
+    currentCell->index = index;
+    currentCell->visit(); 
+
     fringe.push(currentCell);
+
+    for (const auto &coord : findChildren(g, currentCell)) {
+        int y = std::get<0>(coord);
+        int x = std::get<1>(coord);
+        if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+
+        nextCell = &g.grid[y][x];
+        index++;
+        nextCell->index = index;
+        previous[nextCell] = currentCell;
+        fringe.push(nextCell);
+    }
+
+
+    while (!fringe.empty()) { // Run till queue is empty
+        currentCell = fringe.top();
+        fringe.pop();
+
+        if (currentCell->isEnd()) {  // End of Search return path
+            previous[nullptr] = currentCell;
+
+            reconstructPath(renderWindow, g, io, previous, currentCell);
+
+            currentCell = nullptr;
+            nextCell = nullptr;
+            return;
+        } 
+    
+        // Add children to queue if they have not been visited and are not a wall
+        if (!currentCell->wasVisited()) {
+            // Show Current Cell that is being visited
+            currentCell->setSearchFill();
+            renderWindow.render(g, io);
+            SDL_Delay(speed);
+            
+            currentCell->visit();
+
+            for (const auto &coord : findChildren(g, currentCell)) {
+                int y = std::get<0>(coord);
+                int x = std::get<1>(coord);
+
+                // No Neighbor so vals are negative
+                if (y < 0 || x < 0) {continue;}
+
+                // Skip if it was visited already
+                if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+            
+                std::cout << y << " " << x << std::endl;
+                nextCell = &g.grid[y][x];
+                index++;
+                nextCell->index = index;
+                previous[nextCell] = currentCell;
+                fringe.push(nextCell);
+            }          
+        }   
+    }
+}
+
+// Breadth-first Search
+void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
+    
+    // Declare FIFO
+    std::queue<Cell*> fringe;
+    std::map<Cell*, Cell*> previous;
+    
+
+    // Temp pointers
+    Cell *currentCell = nullptr;
+    Cell *nextCell = nullptr;
+
+    int index = 1;
+
+    
+    currentCell = &g.start; // Root
+    currentCell->index = index;
+    currentCell->visit();
+
+    for (const auto &coord : findChildren(g, currentCell)) {
+        int y = std::get<0>(coord);
+        int x = std::get<1>(coord);
+        
+        if (g.grid[y][x].isWall()){continue;}
+
+        nextCell = &g.grid[y][x];
+        index++;
+        nextCell->index = index;
+        previous[nextCell] = currentCell;
+        fringe.push(nextCell);
+    }
+
 
     while (!fringe.empty()) { // Run till queue is empty
         currentCell = fringe.front();
         fringe.pop();
 
         if (currentCell->isEnd()) {  // End of Search return path
-            end = currentCell;
             previous[nullptr] = currentCell;
-            // renderWindow.render(g,io);
-            SDL_Delay(speed); // So it does not finish immediately
-            reconstructPath(renderWindow, g, io, previous, end);
+
+            reconstructPath(renderWindow, g, io, previous, currentCell);
+
             currentCell = nullptr;
             nextCell = nullptr;
-            end = nullptr;
             return;
         } 
+    
+        if (!currentCell->wasVisited() && !currentCell->isStart()) {
+            // Show Current Cell that is being visited
+            currentCell->setSearchFill();
+            renderWindow.render(g, io);
+            SDL_Delay(speed);
+            
+            currentCell->visit();
 
-        // Explore children
-        std::array<std::tuple<int, int>, 4> children = findChildren(g, currentCell);
+            for (const auto &coord : findChildren(g, currentCell)) {
+                int y = std::get<0>(coord);
+                int x = std::get<1>(coord);
+
+                // No Neighbor so vals are negative
+                if (y < 0 || x < 0) {continue;}
+
+                // Add children to queue if they have not been visited and are not a wall
+                if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+            
+                std::cout << y << " " << x << std::endl;
+                nextCell = &g.grid[y][x];
+                index++;
+                nextCell->index = index;
+                previous[nextCell] = currentCell;
+                fringe.push(nextCell);
+            }          
+        }   
+    }
+}
+
+// Depth-first Search
+void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
+    
+    // Declare LIFO
+    std::stack<Cell*> fringe;
+    std::map<Cell*, Cell*> previous;
+    
+
+    // Temp pointers
+    Cell *currentCell = nullptr;
+    Cell *nextCell = nullptr;
+
+    int index = 1;
+
+    currentCell = &g.start; // Root
+    currentCell->index = index;
+    currentCell->visit(); 
+
+    for (const auto &coord : findChildren(g, currentCell)) {
+        int y = std::get<0>(coord);
+        int x = std::get<1>(coord);
+        if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+
+        nextCell = &g.grid[y][x];
+        index++;
+        nextCell->index = index;
+        previous[nextCell] = currentCell;
+        fringe.push(nextCell);
+    }
+
+
+    while (!fringe.empty()) { // Run till queue is empty
+        currentCell = fringe.top();
+        fringe.pop();
+
+        if (currentCell->isEnd()) {  // End of Search return path
+            previous[nullptr] = currentCell;
+
+            reconstructPath(renderWindow, g, io, previous, currentCell);
+
+            currentCell = nullptr;
+            nextCell = nullptr;
+            return;
+        } 
+    
+        // Add children to queue if they have not been visited and are not a wall
+        if (!currentCell->wasVisited() && !currentCell->isStart()) {
+            // Show Current Cell that is being visited
+            currentCell->setSearchFill();
+            renderWindow.render(g, io);
+            SDL_Delay(speed);
+            
+            currentCell->visit();
+
+            for (const auto &coord : findChildren(g, currentCell)) {
+                int y = std::get<0>(coord);
+                int x = std::get<1>(coord);
+
+                // No Neighbor so vals are negative
+                if (y < 0 || x < 0) {continue;}
+
+                // Skip if it was visited already
+                if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+            
+                std::cout << y << " " << x << std::endl;
+                nextCell = &g.grid[y][x];
+                index++;
+                nextCell->index = index;
+                previous[nextCell] = currentCell;
+                fringe.push(nextCell);
+            }          
+        }   
+    }
+}
+
+// Iterative Deepening Search
+void IDS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
+    
+    int cutoff = g.getWidth()*g.getHeight(); // Width is usually greater than height
+    for (int l = 0; l < cutoff; l++) {
+        depthLimitedSearch(renderWindow, g, io, l);
+    }
+}
+
+void depthLimitedSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, int l) {
+    
+    // Declare LIFO
+    Grid resetGrid = g;
+    std::stack<Cell*> fringe;
+    std::map<Cell*, Cell*> previous;
+    
+
+    // Temp pointers
+    Cell *currentCell = nullptr;
+    Cell *nextCell = nullptr;
+
+
+    currentCell = &resetGrid.start; // Root
+    currentCell->index = 0;
+   
+    currentCell->visit(); 
+
+    // If l is 0 do not expand children
+    if (currentCell->index  < l) {
+        for (const auto &coord : findChildren(resetGrid, currentCell)) {
+            int y = std::get<0>(coord);
+            int x = std::get<1>(coord);
+            if (resetGrid.grid[y][x].isWall()){continue;}
+            
+            nextCell = &resetGrid.grid[y][x];
+            nextCell->index = 1; // assign depth
+            std::cout << currentCell->index << std::endl;
         
-        for (const auto &coord : children) {
+            previous[nextCell] = currentCell;
+            fringe.push(nextCell);
+            
+        }
+    }
+
+    while (!fringe.empty()) { // Run till queue is empty
+        currentCell = fringe.top();
+        fringe.pop();
+
+        
+
+        if (currentCell->isEnd()) {  // End of Search return path
+            previous[nullptr] = currentCell;
+            g = resetGrid;
+
+            reconstructPath(renderWindow, g, io, previous, currentCell);
+
+            currentCell = nullptr;
+            nextCell = nullptr;
+            return;
+        } 
+        
+        // Max depth reached
+        if (currentCell->index > l) {continue;}
+
+
+        // Show Current Cell that is being visited 
+        currentCell->setSearchFill();
+        renderWindow.render(resetGrid, io);
+        SDL_Delay(speed);
+        currentCell->isStart();
+        currentCell->visit(); // For visit fill
+        for (const auto &coord : findChildren(resetGrid, currentCell)) {
             int y = std::get<0>(coord);
             int x = std::get<1>(coord);
 
-             if (y < 0 || x < 0 || x >= g.getWidth() || y >= g.getHeight()) {
-                continue;
-            }
-            
-            // Add children to queue if they have not been visited and are not a wall
-            if (!g.grid[y][x].wasVisited() && !g.grid[y][x].isWall() && !g.grid[y][x].isStart()) { 
-                
-                // Show Current Cell that is being visited
-                g.grid[y][x].setSearchFill();
-                // renderWindow.render(g, io);
-                SDL_Delay(speed);
-                g.grid[y][x].visit();
-            
-                nextCell = &g.grid[y][x];
-                fringe.push(nextCell);
-                
-                previous[nextCell] = currentCell;
-                // renderWindow.render(g, io);
-                SDL_Delay(speed); // So it does not finish immediately
+            // No Neighbor so vals are negative
+            if (y < 0 || x < 0) {continue;}
 
-                if (g.grid[y][x].isEnd()) { // If it was an end node reset its fill back to end fill
-                    g.grid[y][x].setSearchFill();
-                }
-            }          
-        }   
+            // Skip if it was visited already or is wall
+            if (resetGrid.grid[y][x].isWall()) {continue;}
+        
+            std::cout << y << " " << x << std::endl;
+            nextCell = &resetGrid.grid[y][x];
+            nextCell->index = currentCell->index + 1; // assign depth
+            previous[nextCell] = currentCell;
+            
+            fringe.push(nextCell);
+        }       
     }
 }

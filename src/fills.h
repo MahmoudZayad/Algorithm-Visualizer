@@ -19,6 +19,7 @@ extern std::array<int, 4> highlightFill;
 extern std::array<int, 4> startFill; 
 extern std::array<int, 4> endFill;  
 extern std::array<int, 4> wallFill;
+extern std::array<int, 4> weightFill;
 
 extern std::array<int, 4> visitedFill;
 extern std::array<int, 4> pathFill;

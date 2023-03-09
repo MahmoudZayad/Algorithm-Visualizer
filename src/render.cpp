@@ -3,7 +3,7 @@
 RenderWindow::RenderWindow() :window(NULL), renderer(NULL) {
     // Create window with SDL_Renderer graphics context
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    window = SDL_CreateWindow("Pathfinding Visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, window_flags);
+    window = SDL_CreateWindow("Pathfinding Visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, window_flags);
 
     if (window == NULL)
 	{
@@ -72,9 +72,7 @@ void RenderWindow::destroyImGui() {
 
 void RenderWindow::drawGrid(Grid &g) {
 
-    std::array<int, 4> c;
-    
-    c = defaultFill;
+    std::array<int, 4> c = defaultFill;
     SDL_SetRenderDrawColor(renderer, c[0], c[1], c[2], c[3]);
     // Update all cells on grid
     for (int i = 0; i < g.getHeight(); i++) {

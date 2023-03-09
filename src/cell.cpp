@@ -7,6 +7,7 @@ Cell::Cell() {
     visited = false;
     wall = false; // Can be updated by user
     weight = 1; // Default cost, can be adjusted by user
+    index = 0;
 
     cellFill = defaultFill;
 }
@@ -25,11 +26,12 @@ Cell::Cell(bool isStart) {
     visited = false;
     wall = false; // Can be updated by user
     weight = 1; // Default cost, can be adjusted by user
+    index = 0;
 }
 
 
 void Cell::mouseHighlightUpdate(bool highlight) {
-    if (start || end || wall || visited) {return;}
+    if (start || end || wall  || weight == 15|| visited) {return;}
     if (highlight) {
         cellFill = highlightFill;
     } else { // Unhighlight cell
@@ -54,7 +56,7 @@ void Cell::wallCellUpdate(bool isWall) {
 
 void Cell::visit() {
     visited = true;
-    if (end) {return;}
+    if (end || start) {return;}
     cellFill = visitedFill;
 }
 
@@ -68,17 +70,36 @@ bool Cell::wasVisited() {return visited;}
 
 // Set and get Weight
 void Cell::setWeight() {weight = 15;}
+void Cell::resetWeight() {weight = 1;}
 int Cell::getWeight() {return weight;}
+
+void Cell::weightCellUpdate(bool isWeight) {
+    if (start || end) {return;}
+    if (isWeight) {
+        cellFill = weightFill;
+        setWeight();
+    } else { // Unhighlight cell
+        cellFill = defaultFill;
+        resetWeight();
+    }
+}
 
 
 // Check if start/end
-bool Cell::isStart() {return start;}
+bool Cell::isStart() {
+    if (start) {cellFill = startFill;} 
+    return start;
+}
 bool Cell::isEnd() {return end;}
 
-void Cell::setPathFill() {cellFill = pathFill;}
+void Cell::setPathFill() {if (!start) cellFill = pathFill;}
 void Cell::setSearchFill() {
     if (end && visited) {
         cellFill = endFill;
+        return;
+    }
+    if (start && visited) {
+        cellFill = startFill;
         return;
     }
     cellFill = searchingFill;

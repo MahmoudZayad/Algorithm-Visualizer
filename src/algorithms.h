@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <functional>
 
 #include <map>
 #include <stack>
@@ -12,6 +13,7 @@
 
 void algorithmsMenu(bool& show_algorithms, int& algorithm);
 void speedMenu(bool& show_speed);
+void weightMenu(bool &show_weights, int& weight);
 
 
 /*
@@ -30,7 +32,12 @@ std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiI
 std::array<std::tuple<int, int>, 4> findChildren(Grid &g, Cell *&root);
 
 // Search Algorithms 
+
+void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::function<bool(Cell*,Cell*)> func);
 void BFS(RenderWindow &renderWindow, Grid &grid, ImGuiIO& io);
+void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
+void IDS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
+void depthLimitedSearch(RenderWindow& renderWindow, Grid& g, ImGuiIO& io, int l);
 
 enum Algorithm_ {
     Algorithm_None,
@@ -49,5 +56,11 @@ extern int speed;
 enum Speed_ { // Used to set speed of search
     Speed_Fast  = 5,
     Speed_Normal = 30,
-    Speed_Slow = 60
+    Speed_Slow = 2000
+};
+
+enum Draw_ { // Used to set speed of search
+    Draw_Wall,
+    Draw_Weights,
+    Draw_Bombs
 };
