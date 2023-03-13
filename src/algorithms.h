@@ -1,10 +1,12 @@
 #pragma once
 
+#include <bits/stdc++.h>
+#include <map>
+#include <stack>
 #include <queue>
 #include <functional>
 
-#include <map>
-#include <stack>
+
 
 
 #include "render.h"
@@ -36,8 +38,9 @@ std::array<std::tuple<int, int>, 4> findChildren(Grid &g, Cell *&root);
 void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::function<bool(Cell*,Cell*)> func);
 void BFS(RenderWindow &renderWindow, Grid &grid, ImGuiIO& io);
 void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
-void IDS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
-void depthLimitedSearch(RenderWindow& renderWindow, Grid& g, ImGuiIO& io, int l);
+void UCS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
+// void IDS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
+// void depthLimitedSearch(RenderWindow& renderWindow, Grid& g, ImGuiIO& io, int l);
 
 enum Algorithm_ {
     Algorithm_None,
@@ -47,16 +50,15 @@ enum Algorithm_ {
     Algorithm_IDS, // Iterative Deepening
     Algorithm_Greedy, // Greedy Best-first Search
     Algorithm_AStar, // A* Search
-    Algorithm_Dijkstra, // Dijkstra's Algorithm
-    Algorithm_Swarm // Swarm Algorithm
+
 };
 
 extern int speed;
 
 enum Speed_ { // Used to set speed of search
-    Speed_Fast  = 5,
-    Speed_Normal = 30,
-    Speed_Slow = 2000
+    Speed_Fast  = 10,
+    Speed_Normal = 60,
+    Speed_Slow = 750
 };
 
 enum Draw_ { // Used to set speed of search

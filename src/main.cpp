@@ -193,8 +193,8 @@ int main(int, char**) {
                     BFS(rind, grid, io);
                 case Algorithm_DFS:
                     DFS(rind, grid, io);
-                case Algorithm_IDS:
-                    IDS(rind, grid, io);
+                case Algorithm_UCS:
+                    UCS(rind, grid, io);
             }
         }
 

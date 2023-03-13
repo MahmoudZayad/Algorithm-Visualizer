@@ -56,7 +56,15 @@ void Cell::wallCellUpdate(bool isWall) {
 
 void Cell::visit() {
     visited = true;
-    if (end || start) {return;}
+    // So it updates after search fill changes it
+    if (end && visited) {
+        cellFill = endFill;
+        return;
+    }
+    if (start && visited) {
+        cellFill = startFill;
+        return;
+    }
     cellFill = visitedFill;
 }
 
@@ -94,14 +102,6 @@ bool Cell::isEnd() {return end;}
 
 void Cell::setPathFill() {if (!start) cellFill = pathFill;}
 void Cell::setSearchFill() {
-    if (end && visited) {
-        cellFill = endFill;
-        return;
-    }
-    if (start && visited) {
-        cellFill = startFill;
-        return;
-    }
     cellFill = searchingFill;
 }
 std::array<int,4> Cell::getFill() {return cellFill;}

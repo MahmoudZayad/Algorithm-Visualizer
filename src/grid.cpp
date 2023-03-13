@@ -76,6 +76,19 @@ void Grid::clearWalls() {
     }
 }
 
+void Grid::clearWeights() {
+    for (int i = 0; i < gridHeight; i++) {
+        for (int j = 0; j < gridWidth; j++) {
+            if (grid[i][j].getWeight() != 1) { 
+                grid[i][j].weightCellUpdate(false);
+            }
+            if (grid[i][j].wasVisited()) {
+                grid[i][j].clearVisited();
+            }
+        }
+    }
+}
+
 void Grid::clearSearch() {
     for (int i = 0; i < gridHeight; i++) {
         for (int j = 0; j < gridWidth; j++) {

@@ -7,6 +7,7 @@ class Grid {
     public:
         Grid();
         void clearWalls();
+        void clearWeights();
         void clearSearch();
         int getHeight();
         int getWidth();
