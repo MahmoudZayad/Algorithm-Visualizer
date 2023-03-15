@@ -29,6 +29,8 @@ class RenderWindow
 		
 		void drawGrid(Grid& grid);
 		std::queue<Cell> animateCell(Grid g, int i, int j);
+		std::queue<Cell> animateSearchCell(Grid g, int i, int j);
+		std::queue<Cell> animatePathCell(Grid g, int i, int j);
 		
 	private:
 		void drawGridLines(Grid &g);

@@ -12,6 +12,8 @@ class Grid {
         int getHeight();
         int getWidth();
 
+        int calculateCellCoords(int coord);
+
         Cell start;
         Cell end;
 
@@ -19,8 +21,7 @@ class Grid {
         
         
     private:
-        int calculateCellCoords(int coord);
-        void intRect(Cell &cell, std::tuple<int,int> coord);
+        void intRect(Cell &cell, std::pair<int,int> coord);
         int gridWidth;
         int gridHeight;
 };

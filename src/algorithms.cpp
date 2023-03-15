@@ -104,7 +104,7 @@ void printPath(std::stack<Cell*> path) {
 
     while (!path.empty()) {
         
-        std::cout << std::get<0>(path.top()->coord) << " " << std::get<1>(path.top()->coord) << std::endl;
+        std::cout << path.top()->coord.first << " " << path.top()->coord.second << std::endl;
         path.pop();
     }
 }
@@ -112,7 +112,7 @@ void printPath(std::stack<Cell*> path) {
 /*
 *  Takes map and creates stack to be used to render path
 */
-std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiIO& io, std::map<Cell*,Cell*> prev, Cell *&end) {
+std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiIO& io, std::map<Cell*,Cell*> prev, Cell *&end, std::vector<std::vector<std::queue<Cell>>>& animGrid) {
 
     std::stack<Cell*> path;
     Cell *currentCell = end;
@@ -122,47 +122,60 @@ std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiI
     while (!currentCell->isStart()) {
         previousCell = prev[currentCell];
         path.push(previousCell);  
-        previousCell->setPathFill();
         currentCell = previousCell;
+
+        animGrid[previousCell->coord.first][previousCell->coord.second] = renderWindow.animatePathCell(grid, previousCell->coord.first, previousCell->coord.second);
+        
+        // Rendering
+        for (int i = 0; i < grid.getHeight(); i++) {
+            for (int j = 0; j < grid.getWidth(); j++) {
+                if (!animGrid[i][j].empty()) {
+                    grid.grid[i][j] = animGrid[i][j].front();
+                    animGrid[i][j].pop();
+                }
+            }
+        }       
+
         renderWindow.render(grid,io);
         SDL_Delay(speed); // So it does not finish immediately
     }
+
     return path;
 }
 
 /*
 * Finds Coords of all children given root and grid size.
 */
-std::array<std::tuple<int, int>, 4> findChildren(Grid &g, Cell *&root) {
+std::array<std::pair<int, int>, 4> findChildren(Grid &g, Cell *&root) {
 
-    std::array<std::tuple<int, int>, 4> children;  // Coords of neighbors
+    std::array<std::pair<int, int>, 4> children;  // Coords of neighbors
 
-    int rootY = std::get<0>(root->coord);
-    int rootX = std::get<1>(root->coord);
+    int rootY = root->coord.first;
+    int rootX = root->coord.second;
 
     // Check Above
     if (rootY - 1 >= 0){
-        children[0] = std::make_tuple(rootY - 1, rootX);
+        children[0] = {rootY - 1, rootX};
     }  else { 
-        children[0] = std::make_tuple(-1,-1); 
+        children[0] = {-1,-1}; 
     }
     // Check Right
     if (rootX + 1 < g.getWidth()){
-        children[1] = std::make_tuple(rootY, rootX + 1);
+        children[1] = {rootY, rootX + 1};
     }  else { 
-        children[1] = std::make_tuple(-1,-1); 
+        children[1] = {-1,-1}; 
     }
     // Check Below
     if (rootY + 1 < g.getHeight()){
-        children[2] = std::make_tuple(rootY + 1, rootX);
+        children[2] = {rootY + 1, rootX};
     }  else { 
-        children[2] = std::make_tuple(-1,-1); 
+        children[2] = {-1,-1}; 
     }
     // Check Behind
     if (rootX - 1 >= 0){
-        children[3] = std::make_tuple(rootY, rootX - 1);
+        children[3] = {rootY, rootX - 1};
     }  else { 
-        children[3] = std::make_tuple(-1,-1); 
+        children[3] = {-1,-1}; 
     }
 
     return children;
@@ -171,87 +184,87 @@ std::array<std::tuple<int, int>, 4> findChildren(Grid &g, Cell *&root) {
 
 // Search Algorithms 
 
-// General Search
-void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::function<bool(Cell*,Cell*)> func) {
+// // General Search
+// void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::function<bool(Cell*,Cell*)> func) {
     
-    // Declare Queue and Map for path
-        // auto compare = [](Cell* a, Cell* b) {return a->index > b->index;};
-    // generalSearch(renderWindow, g, io, compare);
-    std::priority_queue<Cell*, std::vector<Cell*>, decltype(func)> fringe(func);
-    std::map<Cell*, Cell*> previous;
+//     // Declare Queue and Map for path
+//         // auto compare = [](Cell* a, Cell* b) {return a->index > b->index;};
+//     // generalSearch(renderWindow, g, io, compare);
+//     std::priority_queue<Cell*, std::vector<Cell*>, decltype(func)> fringe(func);
+//     std::map<Cell*, Cell*> previous;
     
 
-    // Temp pointers
-    Cell *currentCell = nullptr;
-    Cell *nextCell = nullptr;
+//     // Temp pointers
+//     Cell *currentCell = nullptr;
+//     Cell *nextCell = nullptr;
 
-    int index = 1;
+//     int index = 1;
 
-    currentCell = &g.start; // Root
-    currentCell->index = index;
-    currentCell->visit(); 
+//     currentCell = &g.start; // Root
+//     currentCell->index = index;
+//     currentCell->visit(); 
 
-    fringe.push(currentCell);
+//     fringe.push(currentCell);
 
-    for (const auto &coord : findChildren(g, currentCell)) {
-        int y = std::get<0>(coord);
-        int x = std::get<1>(coord);
-        if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+//     for (const auto &coord : findChildren(g, currentCell)) {
+        // int y = coord.first;
+        // int x = coord.second;
+//         if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
 
-        nextCell = &g.grid[y][x];
-        index++;
-        nextCell->index = index;
-        previous[nextCell] = currentCell;
-        fringe.push(nextCell);
-    }
+//         nextCell = &g.grid[y][x];
+//         index++;
+//         nextCell->index = index;
+//         previous[nextCell] = currentCell;
+//         fringe.push(nextCell);
+//     }
 
 
-    while (!fringe.empty()) { // Run till queue is empty
-        currentCell = fringe.top();
-        fringe.pop();
+//     while (!fringe.empty()) { // Run till queue is empty
+//         currentCell = fringe.top();
+//         fringe.pop();
 
-        if (currentCell->isEnd()) {  // End of Search return path
-            previous[nullptr] = currentCell;
+//         if (currentCell->isEnd()) {  // End of Search return path
+//             previous[nullptr] = currentCell;
 
-            reconstructPath(renderWindow, g, io, previous, currentCell);
+//             reconstructPath(renderWindow, g, io, previous, currentCell);
 
-            currentCell = nullptr;
-            nextCell = nullptr;
-            return;
-        } 
+//             currentCell = nullptr;
+//             nextCell = nullptr;
+//             return;
+//         } 
     
-        // Add children to queue if they have not been visited and are not a wall
-        if (!currentCell->wasVisited()) {
-            // Show Current Cell that is being visited
-            currentCell->setSearchFill();
-            renderWindow.render(g, io);
-            SDL_Delay(speed);
+//         // Add children to queue if they have not been visited and are not a wall
+//         if (!currentCell->wasVisited()) {
+//             // Show Current Cell that is being visited
+//             currentCell->setSearchFill();
+//             renderWindow.render(g, io);
+//             SDL_Delay(speed);
             
-            currentCell->visit();
+//             currentCell->visit();
 
-            for (const auto &coord : findChildren(g, currentCell)) {
-                int y = std::get<0>(coord);
-                int x = std::get<1>(coord);
+//             for (const auto &coord : findChildren(g, currentCell)) {
+//                 int y = std::get<0>(coord);
+//                 int x = std::get<1>(coord);
 
-                // No Neighbor so vals are negative
-                if (y < 0 || x < 0) {continue;}
+//                 // No Neighbor so vals are negative
+//                 if (y < 0 || x < 0) {continue;}
 
-                // Skip if it was visited already
-                if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+//                 // Skip if it was visited already
+//                 if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
             
-                std::cout << y << " " << x << std::endl;
-                nextCell = &g.grid[y][x];
-                index++;
-                nextCell->index = index;
-                previous[nextCell] = currentCell;
-                fringe.push(nextCell);
-            }          
-        }   
-    }
-}
+//                 std::cout << y << " " << x << std::endl;
+//                 nextCell = &g.grid[y][x];
+//                 index++;
+//                 nextCell->index = index;
+//                 previous[nextCell] = currentCell;
+//                 fringe.push(nextCell);
+//             }          
+//         }   
+//     }
+// }
 
 // Breadth-first Search
-void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
+void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid) {
     
     // Declare FIFO
     std::queue<Cell*> fringe;
@@ -262,22 +275,16 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
     Cell *currentCell = nullptr;
     Cell *nextCell = nullptr;
 
-    int index = 1;
-
-    
     currentCell = &g.start; // Root
-    currentCell->index = index;
     currentCell->visit();
 
     for (const auto &coord : findChildren(g, currentCell)) {
-        int y = std::get<0>(coord);
-        int x = std::get<1>(coord);
+        int y = coord.first;
+        int x = coord.second;
         
         if (g.grid[y][x].isWall()){continue;}
 
         nextCell = &g.grid[y][x];
-        index++;
-        nextCell->index = index;
         previous[nextCell] = currentCell;
         fringe.push(nextCell);
     }
@@ -290,24 +297,36 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
         if (currentCell->isEnd()) {  // End of Search return path
             previous[nullptr] = currentCell;
 
-            reconstructPath(renderWindow, g, io, previous, currentCell);
+            reconstructPath(renderWindow, g, io, previous, currentCell, animGrid);
 
             currentCell = nullptr;
             nextCell = nullptr;
             return;
         } 
     
-        if (!currentCell->wasVisited() && !currentCell->isStart()) {
+        if (!currentCell->wasVisited()) {
             // Show Current Cell that is being visited
-            currentCell->setSearchFill();
+            // currentCell->setSearchFill();
+            currentCell->visit();
+            animGrid[currentCell->coord.first][currentCell->coord.second] = renderWindow.animateSearchCell(g, currentCell->coord.first, currentCell->coord.second);
+            
+                // Rendering
+            for (int i = 0; i < g.getHeight(); i++) {
+                for (int j = 0; j < g.getWidth(); j++) {
+                    if (!animGrid[i][j].empty()) {
+                        g.grid[i][j] = animGrid[i][j].front();
+                        animGrid[i][j].pop();
+                    }
+                }
+            }  
+            
             renderWindow.render(g, io);
             SDL_Delay(speed);
-            
-            currentCell->visit();
+            // currentCell->visit();
 
             for (const auto &coord : findChildren(g, currentCell)) {
-                int y = std::get<0>(coord);
-                int x = std::get<1>(coord);
+                int y = coord.first;
+                int x = coord.second;
 
                 // No Neighbor so vals are negative
                 if (y < 0 || x < 0) {continue;}
@@ -315,10 +334,7 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
                 // Add children to queue if they have not been visited and are not a wall
                 if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
             
-                std::cout << y << " " << x << std::endl;
                 nextCell = &g.grid[y][x];
-                index++;
-                nextCell->index = index;
                 previous[nextCell] = currentCell;
                 fringe.push(nextCell);
             }          
@@ -327,7 +343,7 @@ void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
 }
 
 // Depth-first Search
-void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
+void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid) {
     
     // Declare LIFO
     std::stack<Cell*> fringe;
@@ -338,20 +354,16 @@ void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
     Cell *currentCell = nullptr;
     Cell *nextCell = nullptr;
 
-    int index = 1;
-
     currentCell = &g.start; // Root
-    currentCell->index = index;
-    currentCell->visit(); 
+    currentCell->visit();
 
     for (const auto &coord : findChildren(g, currentCell)) {
-        int y = std::get<0>(coord);
-        int x = std::get<1>(coord);
-        if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
+        int y = coord.first;
+        int x = coord.second;
+        
+        if (g.grid[y][x].isWall()){continue;}
 
         nextCell = &g.grid[y][x];
-        index++;
-        nextCell->index = index;
         previous[nextCell] = currentCell;
         fringe.push(nextCell);
     }
@@ -364,36 +376,43 @@ void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
         if (currentCell->isEnd()) {  // End of Search return path
             previous[nullptr] = currentCell;
 
-            reconstructPath(renderWindow, g, io, previous, currentCell);
+            reconstructPath(renderWindow, g, io, previous, currentCell, animGrid);
 
             currentCell = nullptr;
             nextCell = nullptr;
             return;
         } 
     
-        // Add children to queue if they have not been visited and are not a wall
-        if (!currentCell->wasVisited() && !currentCell->isStart()) {
+        if (!currentCell->wasVisited()) {
+            currentCell->visit();
+
             // Show Current Cell that is being visited
-            currentCell->setSearchFill();
+            animGrid[currentCell->coord.first][currentCell->coord.second] = renderWindow.animateSearchCell(g, currentCell->coord.first, currentCell->coord.second);
+            
+            // Rendering
+            for (int i = 0; i < g.getHeight(); i++) {
+                for (int j = 0; j < g.getWidth(); j++) {
+                    if (!animGrid[i][j].empty()) {
+                        g.grid[i][j] = animGrid[i][j].front();
+                        animGrid[i][j].pop();
+                    }
+                }
+            }  
+            
             renderWindow.render(g, io);
             SDL_Delay(speed);
             
-            currentCell->visit();
-
             for (const auto &coord : findChildren(g, currentCell)) {
-                int y = std::get<0>(coord);
-                int x = std::get<1>(coord);
+                int y = coord.first;
+                int x = coord.second;
 
                 // No Neighbor so vals are negative
                 if (y < 0 || x < 0) {continue;}
 
-                // Skip if it was visited already
+                // Add children to queue if they have not been visited and are not a wall
                 if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
             
-                std::cout << y << " " << x << std::endl;
                 nextCell = &g.grid[y][x];
-                index++;
-                nextCell->index = index;
                 previous[nextCell] = currentCell;
                 fringe.push(nextCell);
             }          
@@ -402,70 +421,91 @@ void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
 }
 
 // Uniform-cost Search
-void UCS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io) {
+void UCS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid) {
     
     // Declare Priority Queue with Min Heap
-    auto compare = [](std::pair<Cell*, int> a, std::pair<Cell*, int> b) {return a.second > b.second;};
+    auto compare = [](std::pair<std::pair<int,int>, int> a, std::pair<std::pair<int,int>, int> b) {return a.second > b.second;};
     
-    std::priority_queue<std::pair<Cell*, int>, std::vector<std::pair<Cell*, int>>, decltype(compare)>
+    std::priority_queue<std::pair<std::pair<int,int>, int>, std::vector<std::pair<std::pair<int,int>, int>>, decltype(compare)>
     fringe(compare);
 
     std::map<Cell*, Cell*> previous;
-    std::map<Cell*, int> costs; // Keep track of total costs to reach node
-
+    std::map<std::pair<int,int>, int> costs; // Keep track of total costs to reach node
 
     // Temp ptrs
-    std::pair<Cell*, int> currentCell;
-    std::pair<Cell*, int> nextCell;
+    std::pair<std::pair<int,int>, int> currCellCostPair;
+    Cell* currentCell = nullptr;
+
+    std::pair<std::pair<int,int>, int> nextCellCostPair;
+    Cell* nextCell = nullptr;
     
-    costs[&g.start] = 0; // Add 0 cost to start node
-    fringe.push(std::make_pair(&g.start, 0)); // Root
+    costs[g.start.coord] = 0; // Add 0 cost to start node
+    fringe.push(std::make_pair(g.start.coord, 0)); // Root
     
+    // Set Infinite cost for unvisited nodes
     for (int i = 0; i < g.getHeight(); i++) {
         for (int j = 0; j < g.getWidth(); j++) {
             if (!g.grid[i][j].isStart()) {
-                costs[&g.grid[i][j]] =   INT_MAX; // Set Infinite cost for unvisited nodes
+                costs[g.grid[i][j].coord] =   INT_MAX; 
             }
         }
     }
 
-    while (!fringe.empty()) { // Run till queue is empty
-        currentCell = fringe.top();
+    // Run till fringe is empty and goal is found
+    while (!fringe.empty()) { 
+        currCellCostPair = fringe.top();
+        currentCell = &g.grid[currCellCostPair.first.first][currCellCostPair.first.second];
         fringe.pop();
-        std::cout << "Path cost " << currentCell.second << std::endl;
 
-        if (currentCell.first->isEnd()) {  // End of Search return path
-            previous[nullptr] = currentCell.first;
-            reconstructPath(renderWindow, g, io, previous, currentCell.first);
+         if (currentCell->isEnd()) {  // End of Search return path
+            previous[nullptr] = currentCell;
+
+            reconstructPath(renderWindow, g, io, previous, currentCell, animGrid);
+
+            currentCell = nullptr;
+            nextCell = nullptr;
             return;
         } 
     
-        if (!currentCell.first->wasVisited()) {
-            currentCell.first->setSearchFill(); // Show Current Cell that is being visited
+        if (!currentCell->wasVisited()) {
+            currentCell->visit();
+
+            // Show Current Cell that is being visited
+            animGrid[currentCell->coord.first][currentCell->coord.second] = renderWindow.animateSearchCell(g, currentCell->coord.first, currentCell->coord.second);
+            
+            // Rendering
+            for (int i = 0; i < g.getHeight(); i++) {
+                for (int j = 0; j < g.getWidth(); j++) {
+                    if (!animGrid[i][j].empty()) {
+                        g.grid[i][j] = animGrid[i][j].front();
+                        animGrid[i][j].pop();
+                    }
+                }
+            }  
+
             renderWindow.render(g, io);
             SDL_Delay(speed);
-            currentCell.first->visit();
-            
 
-
-            for (const auto &coord : findChildren(g, currentCell.first)) {
-                int y = std::get<0>(coord);
-                int x = std::get<1>(coord);
+            for (const auto &coord : findChildren(g, currentCell)) {
+                int y = coord.first;
+                int x = coord.second;
 
                 // No Neighbor so vals are negative
                 if (y < 0 || x < 0) {continue;}
+
                 // Add children to queue if they have not been visited and are not a wall
                 if (g.grid[y][x].wasVisited() || g.grid[y][x].isWall()){continue;}
 
-                int altCost = costs[currentCell.first] + g.grid[y][x].getWeight();
+                int altCost = costs[currentCell->coord] + g.grid[y][x].getWeight();
 
-                if (altCost < costs[&g.grid[y][x]]) { // Check if new path is better
+                if (altCost < costs[coord]) { // Check if new path is better
                     
-                    costs[&g.grid[y][x]] = altCost; // Update path length for neighbor
+                    costs[coord] = altCost; // Update path length for neighbor
 
-                    nextCell = std::make_pair(&g.grid[y][x], altCost); 
-                    previous[nextCell.first] = currentCell.first;
-                    fringe.push(nextCell);
+                    nextCellCostPair = std::make_pair(g.grid[y][x].coord, altCost); 
+                    nextCell = &g.grid[y][x];
+                    previous[nextCell] = currentCell;
+                    fringe.push(nextCellCostPair);
                 }
             }          
         }   

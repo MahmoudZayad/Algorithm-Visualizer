@@ -26,19 +26,19 @@ void printPath(std::stack<Cell*> path);
 /*
 *  Takes map and creates stack to be used to render path
 */
-std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiIO& io, std::map<Cell*,Cell*> prev, Cell *&end);
+std::stack<Cell*> reconstructPath(RenderWindow &renderWindow, Grid &grid, ImGuiIO& io, std::map<Cell*,Cell*> prev, Cell *&end, std::vector<std::vector<std::queue<Cell>>>& animGrid);
 
 /*
 * Finds Coords of all children given root and grid size.
 */
-std::array<std::tuple<int, int>, 4> findChildren(Grid &g, Cell *&root);
+std::array<std::pair<int, int>, 4> findChildren(Grid &g, Cell *&root);
 
 // Search Algorithms 
 
 void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::function<bool(Cell*,Cell*)> func);
-void BFS(RenderWindow &renderWindow, Grid &grid, ImGuiIO& io);
-void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
-void UCS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
+void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
+void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
+void UCS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
 // void IDS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io);
 // void depthLimitedSearch(RenderWindow& renderWindow, Grid& g, ImGuiIO& io, int l);
 
@@ -58,7 +58,7 @@ extern int speed;
 enum Speed_ { // Used to set speed of search
     Speed_Fast  = 10,
     Speed_Normal = 60,
-    Speed_Slow = 750
+    Speed_Slow = 180
 };
 
 enum Draw_ { // Used to set speed of search

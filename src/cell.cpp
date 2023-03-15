@@ -39,21 +39,48 @@ void Cell::mouseHighlightUpdate(bool highlight) {
     }
 }
 
-// Cell click events
+/////////////////////~~~~~Cell click events~~~~~~~\\\\\\\\\\\\\\\\\\\\\/
 
-// Left Clicking Cell
-bool Cell::isWall() {return wall;}
+// Make a wall cell or reset
 void Cell::wallCellUpdate(bool isWall) {
-    if (start || end) {return;}
+    if (start || end || visited) {return;}
     if (isWall) {
         cellFill = wallFill;
         wall = true;
     } else { // Unhighlight cell
         cellFill = defaultFill;
         wall = false;
+        float x = cellRect.x;
+        float y = cellRect.y;
+
+        float w = cellRect.w;
+        float h = cellRect.h;
+        cellRect = {x + 1, y + 1, w - 2, h - 2};    
     }
 }
 
+// Make a weight cell or reset
+void Cell::weightCellUpdate(bool isWeight) {
+    if (start || end || visited) {return;}
+    if (isWeight) {
+        cellFill = weightFill;
+        setWeight();
+    } else { // Unhighlight cell
+        cellFill = defaultFill;
+        resetWeight();
+
+        float x = cellRect.x;
+        float y = cellRect.y;
+
+        float w = cellRect.w;
+        float h = cellRect.h;
+        cellRect = {x + 1/2, y + 1/2, w - 1, h - 1};  
+    }
+}
+
+///////////////////////~~~~~~~~~Getters and Setters~~~~~~~~~~~/////////////////////////
+
+// Visit cell
 void Cell::visit() {
     visited = true;
     // So it updates after search fill changes it
@@ -68,12 +95,14 @@ void Cell::visit() {
     cellFill = visitedFill;
 }
 
+// For resetting grid
 void Cell::clearVisited() {
     visited = false; 
     if (start || end) {return;}
     cellFill = defaultFill;
 }
 
+// Get visited
 bool Cell::wasVisited() {return visited;}
 
 // Set and get Weight
@@ -81,17 +110,9 @@ void Cell::setWeight() {weight = 15;}
 void Cell::resetWeight() {weight = 1;}
 int Cell::getWeight() {return weight;}
 
-void Cell::weightCellUpdate(bool isWeight) {
-    if (start || end) {return;}
-    if (isWeight) {
-        cellFill = weightFill;
-        setWeight();
-    } else { // Unhighlight cell
-        cellFill = defaultFill;
-        resetWeight();
-    }
-}
 
+// get Wall
+bool Cell::isWall() {return wall;}
 
 // Check if start/end
 bool Cell::isStart() {
@@ -101,7 +122,8 @@ bool Cell::isStart() {
 bool Cell::isEnd() {return end;}
 
 void Cell::setPathFill() {if (!start) cellFill = pathFill;}
-void Cell::setSearchFill() {
-    cellFill = searchingFill;
+void Cell::setSearchFill(std::array<int,4> fill) {
+    if (end || start) {return;}
+    cellFill = fill;
 }
 std::array<int,4> Cell::getFill() {return cellFill;}

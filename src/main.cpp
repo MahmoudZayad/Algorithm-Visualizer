@@ -61,16 +61,23 @@ int main(int, char**) {
     // Main Loop
     bool done = false;
 
+    // Menu bools
     static bool show_window = true;
     bool show_algorithms = false;
     bool show_weights = false;
     bool show_speed = false;
     bool menu_clicked = false;
+    
+    // Visualize button
     bool visualize = false;
+
+    // Animation check
+    bool anim = false;
+
+    // Algorithms and Grid interactions
     const char* viz = "Visualize";
     int algorithm = Algorithm_None;
     int wei_num = Draw_Wall;
-
 
     while (!done) {
 
@@ -96,10 +103,10 @@ int main(int, char**) {
                             case SDL_BUTTON_LEFT: // Select Wall cell 
                                 leftClick = true;            
                                 // If wall make it not a wall
-                                if (mouseY >= 0) {
+                                if (mouseY >= 0 && !grid.grid[mouseY][mouseX].isStart() && !grid.grid[mouseY][mouseX].isEnd() && !grid.grid[mouseY][mouseX].wasVisited()) {
                                     switch(wei_num) {
                                         case Draw_Wall:
-                                             if (grid.grid[mouseY][mouseX].isWall()) {
+                                            if (grid.grid[mouseY][mouseX].isWall()) {
                                                 grid.grid[mouseY][mouseX].wallCellUpdate(false);
                                             } else { // Make it a wall
                                                 grid.grid[mouseY][mouseX].wallCellUpdate(true);
@@ -120,7 +127,10 @@ int main(int, char**) {
                             }
                     case SDL_MOUSEMOTION:
                         // Drag events
-                        if (mouseY >= 0 && mouseY < grid.getHeight()) { 
+                        if (mouseY >= 0 && mouseY < grid.getHeight() && 
+                            !grid.grid[mouseY][mouseX].isStart() && 
+                            !grid.grid[mouseY][mouseX].isEnd() && 
+                            !grid.grid[mouseY][mouseX].wasVisited()) { 
                             if (leftClick) {
                                 // If Wall make default 
                                 switch(wei_num) {
@@ -186,18 +196,6 @@ int main(int, char**) {
             }
         }
 
-        if (visualize) {
-            visualize = false;
-            switch(algorithm) {
-                case Algorithm_BFS:
-                    BFS(rind, grid, io);
-                case Algorithm_DFS:
-                    DFS(rind, grid, io);
-                case Algorithm_UCS:
-                    UCS(rind, grid, io);
-            }
-        }
-
         // Start the Dear ImGui frame
         rind.startImGuiFrame(); 
         
@@ -245,6 +243,7 @@ int main(int, char**) {
             ImGui::SameLine(0.0f, 0.0f);
             if (ImGui::Button("Clear Walls", buttonSize)) {
                 grid.clearWalls();
+                grid.clearWeights();
                 prevHighlightedCell = nullptr;
                 prevWallCell = nullptr;
                 leftClick = false;
@@ -288,11 +287,29 @@ int main(int, char**) {
             menu_clicked = false;
         }
 
+        if (visualize) {
+            visualize = false;
+            switch(algorithm) {
+                case Algorithm_BFS:
+                    grid.clearWeights();
+                    BFS(rind, grid, io, animGrid);
+                    break;
+                case Algorithm_DFS:
+                    grid.clearWeights();
+                    DFS(rind, grid, io, animGrid);
+                    break;
+                case Algorithm_UCS:
+                    UCS(rind, grid, io, animGrid);
+                    break;
+            }
+        }
+
         // Rendering
         for (int i = 0; i < grid.getHeight(); i++) {
             for (int j = 0; j < grid.getWidth(); j++) {
                 if (!animGrid[i][j].empty()) {
                     grid.grid[i][j] = animGrid[i][j].front();
+                    anim = true;
                     animGrid[i][j].pop();
                 }
             }
@@ -305,6 +322,12 @@ int main(int, char**) {
         }
 
         rind.render(grid, io);
+
+        if (anim) { // Catch rendering issues
+            SDL_Delay(15);
+            anim = false;
+        }
+
     }
     // Cleanup
     rind.destroyImGui();

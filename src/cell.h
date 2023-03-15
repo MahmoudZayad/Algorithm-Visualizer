@@ -2,7 +2,6 @@
 
 #include <SDL2/SDL.h>
 #include <array>
-#include <tuple>
 
 #include "fills.h"
 
@@ -40,12 +39,12 @@ class Cell {
         bool isEnd();
 
         void setPathFill();
-        void setSearchFill();
+        void setSearchFill(std::array<int,4> fill);
 
 
         std::array<int,4> getFill();
 
-        std::tuple<int, int> coord;
+        std::pair<int, int> coord;
         SDL_FRect cellRect;
         int index;
 

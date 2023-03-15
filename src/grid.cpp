@@ -5,7 +5,7 @@
 * Properly spaces each rectangle for rendering on the grid.
 * Uses the rectangle size to determine how many pixels the next rectangle should be shifted.
 */
-int Grid::calculateCellCoords(int coord) {return 1 + (coord*cellSize);}
+int Grid::calculateCellCoords(int coord) {return 1 + (coord*(cellSize));}
 int Grid::getHeight() {return gridHeight;}
 int Grid::getWidth() {return gridWidth;}
 // Cell Grid::getStart() {return start;}
@@ -16,12 +16,12 @@ int Grid::getWidth() {return gridWidth;}
 * Intialize Rectangle with color, size and coord
 * sizexy contains the rectangle size, and the indices of the element in the grid.
 */
-void Grid::intRect(Cell &cell, std::tuple<int,int> coord) {
+void Grid::intRect(Cell &cell, std::pair<int,int> coord) {
     int menuHeight = 4*cellSize;
-    cell.cellRect.h = cellSize;
-    cell.cellRect.w = cellSize;
-    cell.cellRect.x = calculateCellCoords(std::get<1>(coord)); 
-    cell.cellRect.y = calculateCellCoords(std::get<0>(coord)) + menuHeight;
+    cell.cellRect.h = cellSize - 1 ;
+    cell.cellRect.w = cellSize - 1;
+    cell.cellRect.y = calculateCellCoords(coord.first) + menuHeight;
+    cell.cellRect.x = calculateCellCoords(coord.second); 
 }
 
 /*
