@@ -110,7 +110,7 @@ int main(int, char**) {
                                                 grid.grid[mouseY][mouseX].wallCellUpdate(false);
                                             } else { // Make it a wall
                                                 grid.grid[mouseY][mouseX].wallCellUpdate(true);
-                                                animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                                rind.animateCell(grid, mouseY, mouseX, animGrid);
                                             }
                                             break;
                                         case Draw_Weights:
@@ -118,7 +118,7 @@ int main(int, char**) {
                                                 grid.grid[mouseY][mouseX].weightCellUpdate(false);
                                             } else { // Make it a wall
                                                 grid.grid[mouseY][mouseX].weightCellUpdate(true);
-                                                animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                                rind.animateCell(grid, mouseY, mouseX, animGrid);
                                             }
                                             break;
                                     }
@@ -138,13 +138,13 @@ int main(int, char**) {
                                         if (!prevWallCell) {                                 // Update ptr with first wall cell
                                             grid.grid[mouseY][mouseX].wallCellUpdate(true);
                                             prevWallCell = &grid.grid[mouseY][mouseX];
-                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                            rind.animateCell(grid, mouseY, mouseX, animGrid);
                                         } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
                                             continue;
                                         } else if (!grid.grid[mouseY][mouseX].isWall()) {        // Make wall Cell
                                             grid.grid[mouseY][mouseX].wallCellUpdate(true); 
                                             prevWallCell = &grid.grid[mouseY][mouseX];
-                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                            rind.animateCell(grid, mouseY, mouseX, animGrid);
                                         } else {                                                // Remove Wall Cell
                                             grid.grid[mouseY][mouseX].wallCellUpdate(false);
                                             prevWallCell = &grid.grid[mouseY][mouseX];
@@ -154,14 +154,14 @@ int main(int, char**) {
                                          if (!prevWeightCell) {                                 // Update ptr with first weight cell
                                             grid.grid[mouseY][mouseX].weightCellUpdate(true);
                                             prevWeightCell = &grid.grid[mouseY][mouseX];
-                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
+                                            rind.animateCell(grid, mouseY, mouseX, animGrid);
                                         } else if (prevHighlightedCell->coord == grid.grid[mouseY][mouseX].coord) { // Do not in same cell
                                             continue;
                                         } else if (grid.grid[mouseY][mouseX].getWeight() == 1) {        // Make Weight Cell
                                             grid.grid[mouseY][mouseX].weightCellUpdate(true); 
                                             prevWeightCell = &grid.grid[mouseY][mouseX];
-                                            animGrid[mouseY][mouseX] = rind.animateCell(grid, mouseY, mouseX);
-                                        } else {                                                // Remove Weight Cell
+                                            rind.animateCell(grid, mouseY, mouseX, animGrid); 
+                                       } else {                                                // Remove Weight Cell
                                             grid.grid[mouseY][mouseX].weightCellUpdate(false);
                                             prevWeightCell = &grid.grid[mouseY][mouseX];
                                         }
@@ -294,13 +294,17 @@ int main(int, char**) {
                     grid.clearWeights();
                     BFS(rind, grid, io, animGrid);
                     break;
+                case Algorithm_UCS:
+                    UCS(rind, grid, io, animGrid);
+                    break;
                 case Algorithm_DFS:
                     grid.clearWeights();
                     DFS(rind, grid, io, animGrid);
                     break;
-                case Algorithm_UCS:
-                    UCS(rind, grid, io, animGrid);
-                    break;
+                // case Algorithm_IDS:
+                //     grid.clearWeights();
+                //     IDS(rind, grid, io, animGrid);
+                //     break;
             }
         }
 
@@ -309,7 +313,8 @@ int main(int, char**) {
             for (int j = 0; j < grid.getWidth(); j++) {
                 if (!animGrid[i][j].empty()) {
                     grid.grid[i][j] = animGrid[i][j].front();
-                    anim = true;
+                    if (!grid.grid[i][j].isWall()) // If animations still need to be rendered
+                        anim = true;
                     animGrid[i][j].pop();
                 }
             }
@@ -323,9 +328,12 @@ int main(int, char**) {
 
         rind.render(grid, io);
 
-        if (anim) { // Catch rendering issues
-            SDL_Delay(15);
+        // Slows down rendering and adjusts render speed to be the same as the search for path drawing
+        if (anim) { 
+            SDL_Delay(speed);
             anim = false;
+        } else {
+            SDL_Delay(5);
         }
 
     }

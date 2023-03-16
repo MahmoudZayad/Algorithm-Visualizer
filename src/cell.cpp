@@ -7,8 +7,8 @@ Cell::Cell() {
     visited = false;
     wall = false; // Can be updated by user
     weight = 1; // Default cost, can be adjusted by user
-    index = 0;
-
+    
+    coord = {0,0};
     cellFill = defaultFill;
 }
 
@@ -22,11 +22,12 @@ Cell::Cell(bool isStart) {
         end = true;
         cellFill = endFill;
     }
-
     visited = false;
     wall = false; // Can be updated by user
     weight = 1; // Default cost, can be adjusted by user
-    index = 0;
+
+    cellRect = SDL_FRect();
+    coord = {0,0};
 }
 
 

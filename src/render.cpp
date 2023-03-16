@@ -20,7 +20,6 @@ void RenderWindow::render(Grid& g, ImGuiIO& io) {
     // Rendering
     ImGui::Render();
     SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-    // SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
     SDL_SetRenderDrawColor(renderer,44, 44, 44, 255);
     SDL_RenderClear(renderer);
     drawGrid(g);
@@ -117,10 +116,11 @@ void RenderWindow::drawGridLines(Grid &g) {
 /////////////////////////////~~~~~~~~~Cell Animations~~~~~~~~~~/////////////////////////////
 
 /*
-* Makes Cell small and allows it to grow then shrink to normal size.
+// * Makes Cell small and allows it to grow and become oversized so walls are connected.
 * Creates a queue for the sequence of size changes and returns the queue to be used in the AnimationGrid.
 */
-std::queue<Cell> RenderWindow::animateCell(Grid g, int i, int j) {
+void RenderWindow::animateCell(Grid g, int i, int j, 
+                    std::vector<std::vector<std::queue<Cell>>>& animGrid) {
 
     // Reset coords and size incase other animations are not finished
     // {x, y, w, h}
@@ -130,28 +130,25 @@ std::queue<Cell> RenderWindow::animateCell(Grid g, int i, int j) {
     float w = cellSize - 1;
     float h = cellSize - 1;
 
-    std::queue<Cell> anim;
-
-    // Grow from 7 px square to 15px
-    for (int k = 8; k >= 0; k--) { 
+    // Grow from 1 px square to 15px
+    for (int k = 14; k >= 0; k--) { 
         g.grid[i][j].cellRect = {x + (k/2), y + (k/2), w - k, h - k};
-        anim.push(g.grid[i][j]);
+        animGrid[i][j].push(g.grid[i][j]);
     }
 
     // Draw cell Oversized by 1px
 
-    // for (int k = 1; k <= 1; k++) { 
     g.grid[i][j].cellRect = {x - (1/2), y - (1/2), w + 1, h + 1};
-    anim.push(g.grid[i][j]);
-    // }
-    
-    return anim;
+    animGrid[i][j].push(g.grid[i][j]);
+ 
 }
 
 /*
-* Same as the other animation but has a gradient from searchingFill to visitedFill
+* Same as the other animation but grows oversized then shrinks to normal size.
+* Also has a gradient from searchingFill to visitedFill.
 */
-std::queue<Cell> RenderWindow::animateSearchCell(Grid g, int i, int j) {
+void RenderWindow::animateSearchCell(Grid g, int i, int j, 
+                std::vector<std::vector<std::queue<Cell>>>& animGrid) {
 
     // Reset coords and size incase other animations are not finished
     // {x, y, w, h}
@@ -161,20 +158,19 @@ std::queue<Cell> RenderWindow::animateSearchCell(Grid g, int i, int j) {
     float w = cellSize - 1;
     float h = cellSize - 1;
 
-    std::queue<Cell> anim;
     
     // RGB multipliers used in loops
-    int R = (searchingFill[0] - visitedFill[0])/16;
-    int G = (searchingFill[1] - visitedFill[1])/16;
-    int B = (searchingFill[2] - visitedFill[2])/16;
+    int R = (searchingFill[0] - visitedFill[0])/22;
+    int G = (searchingFill[1] - visitedFill[1])/22;
+    int B = (searchingFill[2] - visitedFill[2])/22;
  
     std::array<int, 4> currFill = searchingFill;
         
-    // Grow from 8px square to 15px
-    for (int k = 8; k >= 0; k--) { 
-        g.grid[i][j].setSearchFill({currFill[0] - (R*(8-k)), currFill[1] - (G*(8-k)), currFill[2] - (B*(8-k)), 255});
+    // Grow from 1px square to 15px
+    for (int k = 14; k >= 0; k--) { 
+        g.grid[i][j].setSearchFill({currFill[0] - (R*(14-k)), currFill[1] - (G*(14-k)), currFill[2] - (B*(14-k)), 255});
         g.grid[i][j].cellRect = {x + (k/2), y + (k/2), w - k, h - k };
-        anim.push(g.grid[i][j]);
+        animGrid[i][j].push(g.grid[i][j]);
     }
     
     currFill = g.grid[i][j].getFill();
@@ -183,7 +179,7 @@ std::queue<Cell> RenderWindow::animateSearchCell(Grid g, int i, int j) {
     for (int k = 1; k <= 2; k++) { 
         g.grid[i][j].setSearchFill({currFill[0] - (R*k), currFill[1] - (G*k), currFill[2] - (B*k), 255}); 
         g.grid[i][j].cellRect = {x - (k/2), y - (k/2), w + k, h + k };
-        anim.push(g.grid[i][j]);
+        animGrid[i][j].push(g.grid[i][j]);
     }
     
     currFill = g.grid[i][j].getFill();
@@ -192,21 +188,20 @@ std::queue<Cell> RenderWindow::animateSearchCell(Grid g, int i, int j) {
     for (int k = 1; k <= 2; k++) { 
         g.grid[i][j].setSearchFill({currFill[0] - (R*k), currFill[1] - (G*k), currFill[2] - (B*k), 255});
         g.grid[i][j].cellRect = {x + (k/2), y + (k/2), (w + 2) - k, (h + 2) - k};
-        anim.push(g.grid[i][j]);
+        animGrid[i][j].push(g.grid[i][j]);
     }
 
     g.grid[i][j].setSearchFill(visitedFill);
     g.grid[i][j].cellRect = {x, y, w, h};
-    anim.push(g.grid[i][j]);
-
-    return anim;
+    animGrid[i][j].push(g.grid[i][j]);
 }
 
-
 /*
-* Same as the other animation but has a gradient from visitedFill to pathFill
+* Same as the other animation but grows oversized then shrinks to normal size.
+* Also has a gradient from visitedFill to pathFill.
 */
-std::queue<Cell> RenderWindow::animatePathCell(Grid g, int i, int j) {
+void RenderWindow::animatePathCell(Grid g, int i, int j,
+                     std::vector<std::vector<std::queue<Cell>>>& animGrid) {
 
     // Reset coords and size incase other animations are not finished
     // {x, y, w, h}
@@ -216,20 +211,18 @@ std::queue<Cell> RenderWindow::animatePathCell(Grid g, int i, int j) {
     float w = cellSize - 1;
     float h = cellSize - 1;
 
-    std::queue<Cell> anim;
-    
     // RGB multipliers used in loops
-    int R = (visitedFill[0] - pathFill[0])/16;
-    int G = (visitedFill[1] - pathFill[1])/16;
-    int B = (pathFill[2] - visitedFill[2])/16;
+    int R = (visitedFill[0] - pathFill[0])/22;
+    int G = (visitedFill[1] - pathFill[1])/22;
+    int B = (pathFill[2] - visitedFill[2])/22;
  
     std::array<int, 4> currFill = visitedFill;
         
-    // Grow from 8px square to 15px
-    for (int k = 8; k >= 0; k--) { 
-        g.grid[i][j].setSearchFill({currFill[0] - (R*(8-k)), currFill[1] - (G*(8-k)), currFill[2] - (B*(8-k)), 255});
+    // Grow from 1px square to 15px
+    for (int k = 14; k >= 0; k--) { 
+        g.grid[i][j].setSearchFill({currFill[0] - (R*(14-k)), currFill[1] - (G*(14-k)), currFill[2] - (B*(14-k)), 255});
         g.grid[i][j].cellRect = {x + (k/2), y + (k/2), w - k, h - k };
-        anim.push(g.grid[i][j]);
+        animGrid[i][j].push(g.grid[i][j]);
     }
     
     currFill = g.grid[i][j].getFill();
@@ -238,7 +231,7 @@ std::queue<Cell> RenderWindow::animatePathCell(Grid g, int i, int j) {
     for (int k = 1; k <= 2; k++) { 
         g.grid[i][j].setSearchFill({currFill[0] - (R*k), currFill[1] - (G*k), currFill[2] - (B*k), 255}); 
         g.grid[i][j].cellRect = {x - (k/2), y - (k/2), w + k, h + k };
-        anim.push(g.grid[i][j]);
+        animGrid[i][j].push(g.grid[i][j]);
     }
     
     currFill = g.grid[i][j].getFill();
@@ -247,12 +240,10 @@ std::queue<Cell> RenderWindow::animatePathCell(Grid g, int i, int j) {
     for (int k = 1; k <= 2; k++) { 
         g.grid[i][j].setSearchFill({currFill[0] - (R*k), currFill[1] - (G*k), currFill[2] - (B*k), 255});
         g.grid[i][j].cellRect = {x + (k/2), y + (k/2), (w + 2) - k, (h + 2) - k };
-        anim.push(g.grid[i][j]);
+        animGrid[i][j].push(g.grid[i][j]);
     }
 
     g.grid[i][j].setSearchFill(pathFill);
     g.grid[i][j].cellRect = {x, y, w, h};
-    anim.push(g.grid[i][j]);
-
-    return anim;
+    animGrid[i][j].push(g.grid[i][j]);
 }

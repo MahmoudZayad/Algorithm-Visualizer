@@ -46,7 +46,6 @@ class Cell {
 
         std::pair<int, int> coord;
         SDL_FRect cellRect;
-        int index;
 
     private:
         bool start;

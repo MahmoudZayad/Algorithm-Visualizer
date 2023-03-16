@@ -28,9 +28,9 @@ class RenderWindow
 		void destroyImGui();
 		
 		void drawGrid(Grid& grid);
-		std::queue<Cell> animateCell(Grid g, int i, int j);
-		std::queue<Cell> animateSearchCell(Grid g, int i, int j);
-		std::queue<Cell> animatePathCell(Grid g, int i, int j);
+		void animateCell(Grid g, int i, int j, std::vector<std::vector<std::queue<Cell>>>& animGrid);
+		void animateSearchCell(Grid g, int i, int j, std::vector<std::vector<std::queue<Cell>>>& animGrid);
+		void animatePathCell(Grid g, int i, int j, std::vector<std::vector<std::queue<Cell>>>& animGrid);
 		
 	private:
 		void drawGridLines(Grid &g);
