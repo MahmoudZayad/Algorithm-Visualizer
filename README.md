@@ -5,7 +5,8 @@ A user interface to allow for visualization of various pathfinding algorithms.
 This project is not yet complete, I intend to add more pathing algorithms and 
 the ability to add more end nodes.
 
-Only algorithms currently are Breadth-first Search, Depth-first Search and Uniform-cost Search
+#### Current Algorithms included:
+Breadth-first, Depth-first, Uniform-cost, Greedy Best-first, and A* search.
 
 ## Draw on screen with mouse 
 Click to add/remove a cell, or drag to keep drawing walls or weights.
