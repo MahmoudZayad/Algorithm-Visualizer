@@ -60,13 +60,21 @@ enum Algorithm_ {
 struct Compare {
     std::pair<int,int> coord;
 
-    int totalCost;
+    int totalCost; // Used in uninformed search
+
+    float distanceToEnd  = 0; // Used in informed search (holds distance to end node + weight)
+    float distanceFromStart = 0; // Used in informed search (holds distance from Start Node + weight)
+    float crossProduct = 0; // Used for tie-breaking in A*
 
     int index;
 
     Compare(){}
     Compare(std::pair<int,int> c, int cost, int i) : coord(c), totalCost(cost), index(i) {}
 };
+
+// To calculate distance from goal
+float manhattanDistance(Compare a, Compare b);
+float crossProduct(Compare current, Compare end, Compare start);
 
 void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, 
                    std::vector<std::vector<std::queue<Cell>>>& animGrid,
@@ -75,6 +83,8 @@ void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io,
 void BFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
 void DFS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
 void UCS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
+void greedy(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
+void aStar(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
 // void IDS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid);
 // void depthLimitedSearch(RenderWindow& renderWindow, Grid& g, ImGuiIO& io, std::vector<std::vector<std::queue<Cell>>>& animGrid, int l);
 

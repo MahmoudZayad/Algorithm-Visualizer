@@ -103,7 +103,11 @@ int main(int, char**) {
                             case SDL_BUTTON_LEFT: // Select Wall cell 
                                 leftClick = true;            
                                 // If wall make it not a wall
-                                if (mouseY >= 0 && !grid.grid[mouseY][mouseX].isStart() && !grid.grid[mouseY][mouseX].isEnd() && !grid.grid[mouseY][mouseX].wasVisited()) {
+                                if (mouseY >= 0 && mouseY < grid.getHeight() &&
+                                    mouseX >= 0 && mouseX < grid.getWidth() &&
+                                    !grid.grid[mouseY][mouseX].isStart() && 
+                                    !grid.grid[mouseY][mouseX].isEnd() && 
+                                    !grid.grid[mouseY][mouseX].wasVisited()) {
                                     switch(wei_num) {
                                         case Draw_Wall:
                                             if (grid.grid[mouseY][mouseX].isWall()) {
@@ -128,6 +132,7 @@ int main(int, char**) {
                     case SDL_MOUSEMOTION:
                         // Drag events
                         if (mouseY >= 0 && mouseY < grid.getHeight() && 
+                            mouseX >= 0 && mouseX < grid.getWidth() &&
                             !grid.grid[mouseY][mouseX].isStart() && 
                             !grid.grid[mouseY][mouseX].isEnd() && 
                             !grid.grid[mouseY][mouseX].wasVisited()) { 
@@ -170,7 +175,7 @@ int main(int, char**) {
 
                             }
                             // unhighlight cell if mouse goes off screen
-                            if (mouse.y < 4*16 + 1 || mouse.x == 0 || mouse.y == HEIGHT-1 || mouse.x == WIDTH-1) {
+                            if (mouse.y < 4*16 + 1 || mouse.x == 0 || mouse.y == HEIGHT-2 || mouse.x == WIDTH-1) {
                                 if (prevHighlightedCell) {
                                     prevHighlightedCell->mouseHighlightUpdate(false);// Unhighlight previous cell
                                 }
@@ -300,6 +305,12 @@ int main(int, char**) {
                 case Algorithm_DFS:
                     grid.clearWeights();
                     DFS(rind, grid, io, animGrid);
+                    break;
+                case Algorithm_Greedy:
+                    greedy(rind, grid, io, animGrid);
+                    break;
+                case Algorithm_AStar:
+                    aStar(rind, grid, io, animGrid);
                     break;
                 // case Algorithm_IDS:
                 //     grid.clearWeights();

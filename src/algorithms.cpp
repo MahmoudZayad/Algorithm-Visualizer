@@ -190,6 +190,19 @@ std::array<std::pair<int, int>, 4> findChildren(Grid &g, Cell *&root) {
 }
 
 
+// Distance Calculation
+float manhattanDistance(Compare a, Compare b) {
+    return std::abs((a.coord.first - b.coord.first)) + std::abs((a.coord.second - b.coord.second));
+}
+
+float crossProduct(Compare current, Compare end, Compare start) {
+    float dy1 = current.coord.first - end.coord.first;
+    float dx1 = current.coord.second - end.coord.second;
+    float dy2 = start.coord.first - end.coord.first;
+    float dx2 = start.coord.second - end.coord.second;
+    return std::abs(dx1*dy2 - dx2*dy1)*0.001;
+}
+
 // Search Algorithms 
 
 // General Search
@@ -209,17 +222,23 @@ void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io,
     Compare nextCellComp;
     Cell* nextCell = nullptr;
 
-    int index = 0;
-
     // Return shortest path.
     std::map<Cell*, Cell*> previous; 
 
     // Keep track of total costs to reach node
     std::map<std::pair<int,int>, int> costs;
 
+
+    // For differing Searches
+    int index = 0; // Used in DFS
     
-    costs[g.start.coord] = 0; // Add 0 cost to start node
-    fringe.push(Compare(g.start.coord, 0, 0)); // Root
+    Compare end = Compare(g.end.coord, 0, 0); // Used in Informed Search
+
+    // Start cell
+    Compare start = Compare(g.start.coord, 0, 0);
+    start.distanceToEnd = manhattanDistance(start, end) + g.start.getWeight(); // Distance to end node + weight
+    costs[start.coord] = 0; // Add 0 cost to start node
+    fringe.push(start); 
     
     // Set Infinite cost for unvisited nodes
     for (int i = 0; i < g.getHeight(); i++) {
@@ -280,10 +299,16 @@ void generalSearch(RenderWindow &renderWindow, Grid &g, ImGuiIO& io,
 
                 if (altCost < costs[coord])  // Check if new path is better       
                     costs[coord] = altCost; // Update path length for neighbor
+
                 
-                nextCellComp = Compare(g.grid[y][x].coord, altCost, index); 
+                nextCellComp = Compare(g.grid[y][x].coord, costs[coord], index); 
                 nextCell = &g.grid[y][x];
 
+                // Calculate Distance to End - for Informed Search
+                nextCellComp.distanceToEnd = manhattanDistance(nextCellComp, end);
+                // nextCellComp.distanceFromStart = currCellComp.totalCost + g.grid[y][x].getWeight();
+                // nextCellComp.crossProduct = crossProduct(nextCellComp, end, start);
+            
                 previous[nextCell] = currentCell;
                 fringe.push(nextCellComp);
             }          
@@ -329,6 +354,42 @@ void UCS(RenderWindow &renderWindow, Grid &g, ImGuiIO& io,
             return true;
         }
         return a.totalCost > b.totalCost;
+    };
+
+    generalSearch(renderWindow, g, io, animGrid, compare);
+}
+
+// Greedy Best-first Search
+void greedy(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, 
+         std::vector<std::vector<std::queue<Cell>>>& animGrid) {
+
+    // Compare distances to end node - Max Heap 
+     auto compare = [](Compare a, Compare b) {
+        if (a.distanceToEnd == b.distanceToEnd) {
+            return true;
+        }
+        return a.distanceToEnd > b.distanceToEnd;
+    };
+
+    generalSearch(renderWindow, g, io, animGrid, compare);
+}
+
+// A* Search
+void aStar(RenderWindow &renderWindow, Grid &g, ImGuiIO& io, 
+         std::vector<std::vector<std::queue<Cell>>>& animGrid) {
+
+    // A* uses an admissable heuristic f(n) = g(n) + h(n)
+    // Where g(n) is the cost to go from start to cell n
+    // and h(n) is the estimated cost to go from cell n to end
+    
+    // Compare distances to end node - Max Heap 
+     auto compare = [](Compare a, Compare b) {
+        float fcostA = a.totalCost + a.distanceToEnd; 
+        float fcostB = b.totalCost + b.distanceToEnd;
+        if (fcostA == fcostB) { // If a tie occurs choose node closest to end
+            return a.distanceToEnd > b.distanceToEnd;
+        }
+        return fcostA > fcostB;
     };
 
     generalSearch(renderWindow, g, io, animGrid, compare);
