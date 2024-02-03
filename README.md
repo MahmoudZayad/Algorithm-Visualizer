@@ -2,8 +2,6 @@
 Written in C++, using SDL2 and IMGui.
 
 A user interface to allow for visualization of various pathfinding algorithms.
-This project is not yet complete, I intend to add more pathing algorithms and 
-the ability to add more end nodes.
 
 #### Current Algorithms included:
 Breadth-first, Depth-first, Uniform-cost, Greedy Best-first, and A* search.
